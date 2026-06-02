@@ -1,0 +1,478 @@
+
+# EOS (Enterprise Operating System)
+# Core Business Entities Specification
+# Version 1.0
+# Purpose: Master reference for Coding Agent, Software Architect, Backend Engineer, Frontend Engineer, AI Engineer
+
+====================================================
+PRODUCT VISION
+====================================================
+
+EOS adalah platform operasi perusahaan terpadu yang menyatukan:
+
+- Organization
+- People
+- Workflow
+- Documents
+- Tasks
+- Finance
+- Procurement
+- CRM
+- Inventory
+- Assets
+- Risk
+- Analytics
+- AI
+
+Tujuan utama:
+1. Single Source of Truth
+2. Workflow Driven Operation
+3. Audit First Architecture
+4. AI Ready Architecture
+5. Modular Enterprise Platform
+
+====================================================
+LEVEL 0 - UNIVERSAL CORE ENTITIES
+====================================================
+
+Entities ini dipakai oleh hampir seluruh modul.
+
+1. Organization
+2. Branch
+3. Department
+4. Position
+
+5. User
+6. Role
+7. Permission
+
+8. Document
+9. Attachment
+
+10. Workflow
+11. WorkflowStep
+12. Approval
+
+13. Task
+14. Project
+
+15. Notification
+
+16. AuditLog
+
+====================================================
+DOMAIN 1 - ORGANIZATION
+====================================================
+
+Entities:
+
+- Organization
+- Branch
+- Department
+- Division
+- Position
+- Employee
+
+Relationships:
+
+Organization
+ ├── Branch
+ ├── Department
+ ├── Division
+ └── Position
+
+Employee
+ ├── Organization
+ ├── Branch
+ ├── Department
+ └── Position
+
+====================================================
+DOMAIN 2 - IDENTITY & ACCESS
+====================================================
+
+Entities:
+
+- User
+- Role
+- Permission
+- Session
+
+Relationships:
+
+User
+ ├── Role
+ └── Permission
+
+Role
+ └── Permission
+
+RBAC Required
+
+====================================================
+DOMAIN 3 - DOCUMENT MANAGEMENT
+====================================================
+
+Entities:
+
+- Document
+- Attachment
+- DocumentVersion
+- Folder
+- Tag
+
+Features:
+
+- Versioning
+- Classification
+- OCR Ready
+- Digital Signature Ready
+
+====================================================
+DOMAIN 4 - WORKFLOW ENGINE
+====================================================
+
+Entities:
+
+- Workflow
+- WorkflowStep
+- WorkflowInstance
+- Approval
+- ApprovalHistory
+- Escalation
+
+Features:
+
+- Multi Level Approval
+- SLA
+- Reminder
+- Escalation
+
+====================================================
+DOMAIN 5 - COMMUNICATION
+====================================================
+
+Entities:
+
+- Notification
+- Announcement
+- Comment
+- Mention
+- Message
+
+Features:
+
+- In App Notification
+- Email
+- WhatsApp
+- Push Notification
+
+====================================================
+DOMAIN 6 - TASK & PROJECT
+====================================================
+
+Entities:
+
+- Task
+- Project
+- Milestone
+- Checklist
+- Ticket
+
+Features:
+
+- Assignment
+- Progress Tracking
+- Kanban Ready
+
+====================================================
+DOMAIN 7 - HR
+====================================================
+
+Entities:
+
+- Employee
+- Attendance
+- Leave
+- Payroll
+- Shift
+- Overtime
+- Training
+- PerformanceReview
+
+Features:
+
+- Payroll
+- Leave Management
+- Attendance Tracking
+- KPI Integration
+
+====================================================
+DOMAIN 8 - FINANCE
+====================================================
+
+Entities:
+
+- Account
+- Transaction
+- Invoice
+- Payment
+- Expense
+- Budget
+- Tax
+
+Features:
+
+- General Ledger
+- Cashflow
+- Budget Control
+- Tax Ready
+
+====================================================
+DOMAIN 9 - PROCUREMENT
+====================================================
+
+Entities:
+
+- Vendor
+- PurchaseRequest
+- PurchaseOrder
+- Quotation
+- Receiving
+
+Features:
+
+- Approval Workflow
+- Vendor Evaluation
+- Procurement Tracking
+
+====================================================
+DOMAIN 10 - CRM
+====================================================
+
+Entities:
+
+- Customer
+- Lead
+- Opportunity
+- Contact
+- Interaction
+
+Features:
+
+- Lead Management
+- Customer History
+- Sales Pipeline
+
+====================================================
+DOMAIN 11 - SALES
+====================================================
+
+Entities:
+
+- Quotation
+- SalesOrder
+- Invoice
+- Payment
+
+Features:
+
+- Sales Pipeline
+- Revenue Tracking
+
+====================================================
+DOMAIN 12 - INVENTORY
+====================================================
+
+Entities:
+
+- Product
+- Warehouse
+- Stock
+- StockMovement
+- Category
+
+Features:
+
+- Multi Warehouse
+- Stock Adjustment
+- Stock Opname
+
+====================================================
+DOMAIN 13 - ASSET MANAGEMENT
+====================================================
+
+Entities:
+
+- Asset
+- AssetCategory
+- AssetAssignment
+- Maintenance
+- Depreciation
+
+====================================================
+DOMAIN 14 - RISK & COMPLIANCE
+====================================================
+
+Entities:
+
+- Risk
+- Control
+- Violation
+- Finding
+- Investigation
+
+Purpose:
+
+- Fraud Prevention
+- Compliance Monitoring
+- Risk Assessment
+
+====================================================
+DOMAIN 15 - ANALYTICS
+====================================================
+
+Entities:
+
+- KPI
+- Metric
+- Dashboard
+- Report
+
+Features:
+
+- Executive Dashboard
+- KPI Monitoring
+- Trend Analysis
+
+====================================================
+DOMAIN 16 - AI LAYER
+====================================================
+
+Entities:
+
+- AIAgent
+- AIInsight
+- AIRecommendation
+- AIAlert
+- AIMemory
+- AICase
+
+Purpose:
+
+- AI Assistant
+- AI Analyst
+- AI Recommendation
+- AI Fraud Detection
+- AI Agent
+
+====================================================
+MASTER CORE ENTITY LIST
+====================================================
+
+Organization
+Branch
+Department
+Position
+
+User
+Role
+Permission
+
+Employee
+
+Document
+Attachment
+
+Workflow
+WorkflowStep
+Approval
+
+Task
+Project
+
+Notification
+
+AuditLog
+
+Customer
+Vendor
+
+Product
+
+Invoice
+Payment
+
+Transaction
+
+Asset
+
+Risk
+
+KPI
+
+AIInsight
+AIAlert
+AIAgent
+
+====================================================
+BUILD ORDER
+====================================================
+
+PHASE 1
+- Organization
+- User
+- Role
+- Permission
+- AuditLog
+
+PHASE 2
+- Document
+- Workflow
+- Approval
+- Notification
+
+PHASE 3
+- Task
+- Project
+- Employee
+
+PHASE 4
+- Customer
+- Vendor
+- Invoice
+- Payment
+- Transaction
+
+PHASE 5
+- Product
+- Inventory
+- Asset
+
+PHASE 6
+- KPI
+- Risk
+- Analytics
+
+PHASE 7
+- AIInsight
+- AIAlert
+- AIRecommendation
+- AIAgent
+
+====================================================
+ARCHITECTURE PRINCIPLES
+====================================================
+
+1. Modular First
+2. Workflow First
+3. Audit First
+4. API First
+5. Event Driven Ready
+6. Multi Tenant Ready
+7. AI Ready
+8. Self Hosted Ready
+9. Cloud Ready
+10. Enterprise Scale Ready
+
+END OF SPECIFICATION

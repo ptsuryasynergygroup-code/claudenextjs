@@ -1,0 +1,619 @@
+# PRODUCT REQUIREMENTS DOCUMENT (PRD)
+
+## Product Name (Working Title)
+
+Enterprise Operating System (EOS)
+
+Tagline:
+
+"One Platform. One Truth. One Intelligence."
+
+---
+
+# 1. Product Vision
+
+Membangun platform operasi perusahaan terpadu yang menghubungkan seluruh proses bisnis, data, manusia, workflow, dan kecerdasan buatan (AI) ke dalam satu ekosistem.
+
+Tujuan utama:
+
+* Digitalisasi seluruh aktivitas perusahaan
+* Meningkatkan efisiensi operasional
+* Memperkuat kontrol manajemen
+* Mengurangi risiko fraud
+* Menyediakan insight bisnis berbasis data
+* Menjadi fondasi AI perusahaan
+
+---
+
+# 2. Problem Statement
+
+Sebagian besar perusahaan menggunakan banyak sistem terpisah:
+
+* Excel
+* WhatsApp
+* Accounting Software
+* HR Software
+* CRM
+* Email
+* Google Drive
+
+Akibatnya:
+
+* Data tersebar
+* Duplikasi data
+* Sulit diaudit
+* Sulit dipantau
+* Fraud sulit dideteksi
+* Keputusan lambat
+
+EOS hadir sebagai single source of truth perusahaan.
+
+---
+
+# 3. Product Goals
+
+### Business Goals
+
+* Meningkatkan efisiensi operasional
+* Menurunkan biaya administrasi
+* Meningkatkan transparansi
+* Meningkatkan pengawasan manajemen
+* Menyiapkan perusahaan menuju AI-native operation
+
+### User Goals
+
+Owner:
+
+* Melihat kondisi bisnis secara real-time
+* Mengurangi blind spot operasional
+
+Manager:
+
+* Memantau tim dan KPI
+* Mengelola approval
+
+Employee:
+
+* Bekerja dalam satu sistem terintegrasi
+
+---
+
+# 4. Target Market
+
+Tier C
+
+* UMKM
+* Startup
+* Perusahaan kecil
+
+Tier B
+
+* Perusahaan berkembang
+* Multi departemen
+
+Tier A
+
+* Perusahaan menengah hingga besar
+* Multi cabang
+
+Tier S
+
+* Enterprise
+* Holding Company
+* AI-first organization
+
+---
+
+# 5. Product Architecture
+
+Enterprise Operating System
+
+Layer 1
+Core Platform
+
+Layer 2
+Operational Modules
+
+Layer 3
+Workflow & Automation
+
+Layer 4
+Analytics & Intelligence
+
+Layer 5
+AI Layer
+
+---
+
+# 6. Core Principles
+
+1. Modular
+2. Configurable
+3. Multi-company
+4. AI-ready
+5. Audit-first
+6. Mobile-first
+7. Cloud-ready
+8. Self-hosted capable
+9. Package-based access
+10. API-first interoperability
+
+---
+
+# 7. Tier Structure
+
+## Tier C - Core
+
+Focus:
+Digitalisasi Dasar
+
+Modules:
+
+* Organization
+* User Management
+* Role & Permission
+* Document Management
+* Notification
+* HR Basic
+* Finance Basic
+
+---
+
+## Tier B - Business
+
+Focus:
+Operational Control
+
+Additional Modules:
+
+* Workflow Engine
+* Procurement
+* CRM
+* Sales
+* Vendor Management
+* Asset Management
+* Audit Log
+* KPI
+
+---
+
+## Tier A - Advanced
+
+Focus:
+Enterprise Management
+
+Additional Modules:
+
+* Inventory
+* Project Management
+* Helpdesk
+* Knowledge Base
+* Dashboard Builder
+* Form Builder
+* Risk Engine
+* Multi Branch
+* Multi Company
+
+---
+
+## Tier S - Singularity
+
+Focus:
+Enterprise Intelligence
+
+Additional Modules:
+
+* AI Assistant
+* AI Analyst
+* AI Recommendation Engine
+* AI Fraud Detection
+* AI Autonomous Agent
+* Predictive Analytics
+* Executive Intelligence
+
+---
+
+# 7.1 Package, Module & Feature Entitlement
+
+EOS harus dibangun sebagai platform modular yang memungkinkan setiap organisasi mengaktifkan atau menonaktifkan modul dan fitur sesuai paket layanan yang digunakan.
+
+Tujuan:
+
+* Mendukung model paket berjenjang
+* Memungkinkan upsell modul dan fitur
+* Menjaga sistem tetap ringan untuk perusahaan kecil
+* Memberikan fleksibilitas untuk enterprise dan holding company
+* Menyiapkan fondasi marketplace modul di masa depan
+
+Core Concepts:
+
+## Module Registry
+
+Semua modul EOS harus terdaftar dalam registry pusat.
+
+Contoh modul:
+
+* Organization
+* HR
+* Finance
+* Procurement
+* CRM
+* Sales
+* Inventory
+* Asset Management
+* Workflow
+* Document Management
+* Analytics
+* AI
+
+Setiap modul memiliki:
+
+* Module code
+* Module name
+* Description
+* Status
+* Dependencies
+
+## Package / Plan
+
+Paket menentukan kumpulan modul dan fitur yang tersedia untuk organisasi.
+
+Contoh paket:
+
+* Core
+* Business
+* Advanced
+* Singularity
+
+Setiap paket dapat memiliki:
+
+* Included modules
+* Included features
+* Usage limits
+* User limits
+* Storage limits
+* AI usage limits
+
+## Organization Entitlement
+
+Setiap organisasi memiliki hak akses terhadap modul dan fitur tertentu berdasarkan paket aktif.
+
+Entitlement harus menentukan:
+
+* Paket aktif organisasi
+* Modul yang aktif
+* Fitur yang aktif
+* Masa berlaku paket
+* Override khusus enterprise
+
+## Feature Flags
+
+Fitur di dalam modul harus bisa diaktifkan atau dinonaktifkan tanpa mengubah struktur utama aplikasi.
+
+Contoh:
+
+* Document Management aktif
+* OCR belum aktif
+* Digital Signature aktif
+* AI Classification belum aktif
+
+## RBAC Integration
+
+Modul aktif belum berarti semua user dapat mengaksesnya.
+
+Akses user harus melewati dua lapisan:
+
+1. Organization entitlement
+2. Role & Permission
+
+Contoh:
+
+* Organisasi memiliki modul Finance aktif
+* User hanya dapat membuka Finance jika role-nya memiliki permission Finance
+
+## System Behavior
+
+Jika modul atau fitur tidak aktif:
+
+* Menu tidak ditampilkan
+* Route halaman diblokir
+* API menolak request
+* Permission terkait tidak dapat digunakan
+* Workflow terkait tidak dapat dijalankan
+* AI tidak boleh mengakses data modul tersebut
+
+## Recommended Data Entities
+
+* modules
+* features
+* packages
+* package_modules
+* package_features
+* organization_packages
+* organization_modules
+* organization_features
+* permissions
+
+## Architecture Requirement
+
+Sistem harus dibangun API-first agar modul yang sama dapat digunakan oleh:
+
+* Web app
+* Mobile app
+* Desktop app
+* AI agent
+* External integrations
+* Future module marketplace
+
+Next.js dapat digunakan sebagai web application layer dan dashboard utama, tetapi business logic utama harus dirancang agar dapat digunakan ulang oleh berbagai client dan device.
+
+---
+
+# 8. Core Modules
+
+## Organization
+
+Features:
+
+* Company
+* Branch
+* Department
+* Position
+
+---
+
+## User Management
+
+Features:
+
+* User
+* Authentication
+* Profile
+* Status
+
+---
+
+## Role & Permission
+
+Features:
+
+* RBAC
+* Permission Matrix
+
+---
+
+## Workflow Engine
+
+Features:
+
+* Approval Flow
+* Escalation
+* SLA
+* Reminder
+
+---
+
+## Document Management
+
+Features:
+
+* Upload
+* Versioning
+* OCR
+* Classification
+* Digital Signature
+
+---
+
+## Audit Log
+
+Features:
+
+* Activity Tracking
+* Login Tracking
+* Change Tracking
+
+---
+
+## Notification
+
+Features:
+
+* Email
+* WhatsApp
+* Push Notification
+* In-App Notification
+
+---
+
+## HR
+
+Features:
+
+* Employee
+* Attendance
+* Leave
+* Payroll
+* Tax
+* BPJS
+* Performance
+
+---
+
+## Finance
+
+Features:
+
+* Journal
+* Ledger
+* Cashflow
+* Budget
+* Expense
+* Income
+* Bank Reconciliation
+
+---
+
+## Procurement
+
+Features:
+
+* PR
+* RFQ
+* PO
+* Vendor Selection
+* Receiving
+
+---
+
+## CRM
+
+Features:
+
+* Customer
+* Contact
+* Interaction History
+
+---
+
+## Sales
+
+Features:
+
+* Lead
+* Opportunity
+* Quotation
+* Sales Order
+* Invoice
+
+---
+
+## Inventory
+
+Features:
+
+* Warehouse
+* Stock
+* Transfer
+* Stock Opname
+
+---
+
+## Asset Management
+
+Features:
+
+* Asset Register
+* Assignment
+* Maintenance
+* Depreciation
+
+---
+
+## Project Management
+
+Features:
+
+* Task
+* Project
+* Milestone
+* Timeline
+
+---
+
+## Helpdesk
+
+Features:
+
+* Ticket
+* Complaint
+* Request
+
+---
+
+## Knowledge Base
+
+Features:
+
+* SOP
+* Documentation
+* FAQ
+
+---
+
+# 9. AI Vision
+
+AI bukan fitur tambahan.
+
+AI adalah entitas operasional perusahaan.
+
+AI Functions:
+
+## AI Assistant
+
+Menjawab pertanyaan bisnis.
+
+Contoh:
+"Berapa omzet bulan ini?"
+
+---
+
+## AI Analyst
+
+Menjelaskan penyebab masalah.
+
+Contoh:
+"Mengapa margin turun?"
+
+---
+
+## AI Recommendation
+
+Memberikan rekomendasi operasional.
+
+Contoh:
+"Cabang Surabaya membutuhkan tambahan staf."
+
+---
+
+## AI Fraud Detection
+
+Mendeteksi:
+
+* Invoice abnormal
+* Dokumen mencurigakan
+* Vendor berisiko
+* Pola transaksi tidak wajar
+
+---
+
+## AI Agent
+
+Melakukan tindakan otomatis.
+
+Contoh:
+
+* Follow-up invoice
+* Reminder
+* Escalation
+* Ticket creation
+
+---
+
+# 10. Long-Term Vision
+
+EOS berkembang menjadi:
+
+Business Operating System
+
+yang mampu:
+
+* Menjalankan operasional perusahaan
+* Menyimpan seluruh pengetahuan perusahaan
+* Membantu pengambilan keputusan
+* Menjadi co-pilot manajemen
+* Menjadi intelligence layer perusahaan
+
+Ultimate Goal:
+
+"Membuat perusahaan dapat beroperasi lebih efisien, lebih transparan, dan lebih cerdas melalui integrasi data, workflow, dan AI."

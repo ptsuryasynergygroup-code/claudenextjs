@@ -1,0 +1,119 @@
+ENTERPRISE OPERATING SYSTEM (EOS) - FOUNDATION ERD
+
+LEVEL 1 - FOUNDATION ERD
+
+Organization ├── Branch ├── Department ├── Position └── User
+
+ORGANIZATION organizations ————- id name code tax_number address status
+created_at updated_at
+
+BRANCH branches ————- id organization_id name code address status
+
+DEPARTMENT departments ————- id organization_id name code
+
+POSITION positions ————- id department_id name level
+
+USER & ACCESS
+
+USERS users ————- id organization_id branch_id department_id position_id
+name email phone status created_at
+
+ROLES roles ————- id organization_id name description
+
+PERMISSIONS permissions ————- id module action
+
+USER ROLES user_roles ————- user_id role_id
+
+ROLE PERMISSIONS role_permissions ————- role_id permission_id
+
+WORKFLOW ENGINE
+
+WORKFLOWS workflows ————- id organization_id name description
+entity_type
+
+WORKFLOW STEPS workflow_steps ————- id workflow_id step_order name
+
+WORKFLOW APPROVERS workflow_approvers ————- workflow_step_id user_id
+role_id
+
+WORKFLOW INSTANCES workflow_instances ————- id workflow_id entity_type
+entity_id status
+
+DOCUMENT ENGINE
+
+DOCUMENTS documents ————- id organization_id title document_type
+uploaded_by status
+
+DOCUMENT FILES document_files ————- id document_id file_name file_path
+file_size mime_type
+
+DOCUMENT VERSIONS document_versions ————- id document_id version
+created_by
+
+TASK ENGINE
+
+TASKS tasks ————- id organization_id title description assigned_to
+status due_date
+
+TASK COMMENTS task_comments ————- id task_id user_id comment
+
+NOTIFICATION ENGINE
+
+NOTIFICATIONS notifications ————- id user_id title message channel
+read_at
+
+AUDIT ENGINE
+
+AUDIT LOGS audit_logs ————- id user_id entity_type entity_id action
+old_value new_value ip_address created_at
+
+FINANCE FOUNDATION
+
+ACCOUNTS accounts ————- id organization_id code name type
+
+TRANSACTIONS transactions ————- id organization_id account_id amount
+transaction_date description
+
+HR FOUNDATION
+
+EMPLOYEES employees ————- id user_id employee_code join_date
+employment_status
+
+ATTENDANCES attendances ————- id employee_id clock_in clock_out latitude
+longitude
+
+LEAVE REQUESTS leave_requests ————- id employee_id start_date end_date
+reason status
+
+PROCUREMENT FOUNDATION
+
+VENDORS vendors ————- id organization_id name tax_number phone email
+
+PURCHASE REQUESTS purchase_requests ————- id request_number requester_id
+status
+
+PURCHASE ORDERS purchase_orders ————- id vendor_id po_number status
+
+CRM FOUNDATION
+
+CUSTOMERS customers ————- id organization_id name phone email
+
+CUSTOMER INTERACTIONS customer_interactions ————- id customer_id user_id
+interaction_type notes
+
+UNIVERSAL ENTITY CONCEPT
+
+Organization ├── Users │ ├── Roles │ └── Permissions ├── Workflows ├──
+Documents ├── Tasks ├── Notifications ├── Audit Logs ├── HR ├── Finance
+├── Procurement ├── CRM └── Inventory
+
+RECOMMENDED BUILD ORDER
+
+1.  Organization
+2.  User
+3.  Role & Permission
+4.  Audit Log
+5.  Notification
+6.  Document Engine
+7.  Workflow Engine
+8.  Task Engine
