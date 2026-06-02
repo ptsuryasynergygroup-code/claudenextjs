@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/breadcrumb'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
+import { UserMenu } from '@/components/dashboard/user-menu'
 import React from 'react'
 
 const routeLabels: Record<string, string> = {
@@ -26,7 +27,7 @@ const routeLabels: Record<string, string> = {
   'audit-log': 'Audit Log',
 }
 
-export function DashboardHeader() {
+export function DashboardHeader({ user }: { user: { name: string; email: string } }) {
   const pathname = usePathname()
   const segments = pathname.split('/').filter(Boolean)
 
@@ -60,6 +61,9 @@ export function DashboardHeader() {
           ))}
         </BreadcrumbList>
       </Breadcrumb>
+      <div className="ml-auto">
+        <UserMenu name={user.name} email={user.email} />
+      </div>
     </header>
   )
 }

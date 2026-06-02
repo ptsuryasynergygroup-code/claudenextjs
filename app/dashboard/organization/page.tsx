@@ -1,39 +1,60 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Building2, MapPin, Phone, Mail, Globe, Hash, Users } from 'lucide-react'
-import { organization, branches, departments, positions } from '@/lib/data/organization'
-import { users } from '@/lib/data/users'
+import {
+  getOrganization,
+  getBranches,
+  getDepartments,
+  getPositions,
+} from '@/lib/services/organization/service'
+import { getUsers } from '@/lib/services/user/service'
+import type { UserDto } from '@/lib/entities/user/schema'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
-const stats = [
-  {
-    title: 'Branches',
-    value: branches.length,
-    active: branches.filter((b) => b.status === 'active').length,
-    href: '/dashboard/organization/branches',
-  },
-  {
-    title: 'Departments',
-    value: departments.length,
-    active: departments.filter((d) => d.status === 'active').length,
-    href: '/dashboard/organization/departments',
-  },
-  {
-    title: 'Positions',
-    value: positions.length,
-    active: positions.filter((p) => p.status === 'active').length,
-    href: '/dashboard/organization/positions',
-  },
-  {
-    title: 'Employees',
-    value: users.length,
-    active: users.filter((u) => u.status === 'active').length,
-    href: '/dashboard/users',
-  },
-]
+export default async function OrganizationPage() {
+  const [organization, branches, departments, positions] = await Promise.all([
+    getOrganization(),
+    getBranches(),
+    getDepartments(),
+    getPositions(),
+  ])
 
-export default function OrganizationPage() {
+  // Employee count needs users.view; degrade to org headcount-less if forbidden.
+  let users: UserDto[] = []
+  try {
+    users = await getUsers()
+  } catch {
+    users = []
+  }
+
+  const stats = [
+    {
+      title: 'Branches',
+      value: branches.length,
+      active: branches.filter((b) => b.status === 'active').length,
+      href: '/dashboard/organization/branches',
+    },
+    {
+      title: 'Departments',
+      value: departments.length,
+      active: departments.filter((d) => d.status === 'active').length,
+      href: '/dashboard/organization/departments',
+    },
+    {
+      title: 'Positions',
+      value: positions.length,
+      active: positions.filter((p) => p.status === 'active').length,
+      href: '/dashboard/organization/positions',
+    },
+    {
+      title: 'Employees',
+      value: users.length,
+      active: users.filter((u) => u.status === 'active').length,
+      href: '/dashboard/users',
+    },
+  ]
+
   return (
     <div className="space-y-6">
       <div>

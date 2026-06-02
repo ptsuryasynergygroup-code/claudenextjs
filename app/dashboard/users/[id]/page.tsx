@@ -16,10 +16,6 @@ import {
   Edit,
   MoreHorizontal,
 } from 'lucide-react'
-import { getUserById, users } from '@/lib/data/users'
-import { getBranchById, getDepartmentById, getPositionById } from '@/lib/data/organization'
-import { getUserRoles, getRolePermissions } from '@/lib/data/roles'
-import { getAuditLogsByUser } from '@/lib/data/audit-log'
 import { format, formatDistanceToNow } from 'date-fns'
 import {
   DropdownMenu,
@@ -28,17 +24,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { EosError } from '@/lib/errors'
+import { getUser } from '@/lib/services/user/service'
+import { getBranches, getDepartments, getPositions } from '@/lib/services/organization/service'
+import { getUserRoles, getRolePermissions } from '@/lib/services/role/service'
+import { getAuditLogs } from '@/lib/services/audit-log/service'
+import type { RoleDto, PermissionDto } from '@/lib/entities/role/schema'
+import type { AuditLogDto } from '@/lib/entities/audit-log/schema'
 
 const statusVariants: Record<string, 'default' | 'secondary' | 'destructive'> = {
   active: 'default',
   inactive: 'secondary',
   suspended: 'destructive',
-}
-
-export function generateStaticParams() {
-  return users.map((user) => ({
-    id: user.id,
-  }))
 }
 
 export default async function UserDetailPage({
@@ -47,17 +44,44 @@ export default async function UserDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const user = getUserById(id)
 
-  if (!user) {
-    notFound()
+  let user
+  try {
+    user = await getUser(id)
+  } catch (e) {
+    if (e instanceof EosError && e.code === 'NOT_FOUND') notFound()
+    throw e
   }
 
-  const department = user.departmentId ? getDepartmentById(user.departmentId) : null
-  const position = user.positionId ? getPositionById(user.positionId) : null
-  const branch = user.branchId ? getBranchById(user.branchId) : null
-  const userRoles = getUserRoles(user.id)
-  const userLogs = getAuditLogsByUser(user.id).slice(0, 10)
+  const [branches, departments, positions] = await Promise.all([
+    getBranches(),
+    getDepartments(),
+    getPositions(),
+  ])
+  const branch = user.branchId ? branches.find((b) => b.id === user.branchId) : null
+  const department = user.departmentId ? departments.find((d) => d.id === user.departmentId) : null
+  const position = user.positionId ? positions.find((p) => p.id === user.positionId) : null
+
+  // Roles + their permissions, and this user's recent activity — degrade if forbidden.
+  let userRoles: RoleDto[] = []
+  let permsByRole: Record<string, PermissionDto[]> = {}
+  try {
+    userRoles = await getUserRoles(user.id)
+    permsByRole = Object.fromEntries(
+      await Promise.all(
+        userRoles.map(async (r) => [r.id, await getRolePermissions(r.id)] as const),
+      ),
+    )
+  } catch {
+    userRoles = []
+  }
+
+  let userLogs: AuditLogDto[] = []
+  try {
+    userLogs = (await getAuditLogs({ userId: user.id, limit: 10 })).slice(0, 10)
+  } catch {
+    userLogs = []
+  }
 
   return (
     <div className="space-y-6">
@@ -78,7 +102,7 @@ export default async function UserDetailPage({
               {position?.name || 'No position'} {department && `at ${department.name}`}
             </p>
             <div className="flex items-center gap-2 mt-2">
-              <Badge variant="outline">{user.employeeId}</Badge>
+              <Badge variant="outline">{user.employeeId ?? '-'}</Badge>
               <Badge variant={statusVariants[user.status]}>{user.status}</Badge>
             </div>
           </div>
@@ -120,7 +144,6 @@ export default async function UserDetailPage({
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-2">
-            {/* Contact Information */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Contact Information</CardTitle>
@@ -144,7 +167,6 @@ export default async function UserDetailPage({
               </CardContent>
             </Card>
 
-            {/* Organization Information */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Organization</CardTitle>
@@ -176,7 +198,6 @@ export default async function UserDetailPage({
               </CardContent>
             </Card>
 
-            {/* Account Information */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Account Information</CardTitle>
@@ -206,7 +227,6 @@ export default async function UserDetailPage({
               </CardContent>
             </Card>
 
-            {/* Quick Stats */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Quick Stats</CardTitle>
@@ -246,7 +266,7 @@ export default async function UserDetailPage({
               {userRoles.length > 0 ? (
                 <div className="space-y-4">
                   {userRoles.map((role) => {
-                    const permissions = getRolePermissions(role.id)
+                    const permissions = permsByRole[role.id] ?? []
                     return (
                       <div key={role.id} className="rounded-lg border p-4">
                         <div className="flex items-start justify-between">

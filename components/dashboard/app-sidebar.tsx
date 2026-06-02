@@ -3,6 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { signOut } from 'next-auth/react'
 import {
   Building2,
   Users,
@@ -39,18 +40,22 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
-import { currentUser } from '@/lib/data/users'
 
+// Each nav entry is gated by a module code (except Dashboard, always visible).
+// The layout passes the org's enabled module codes; we filter against them so
+// modules the org isn't entitled to never render (PRD §7.1 system behavior).
 const navigationItems = [
   {
     title: 'Dashboard',
     icon: LayoutDashboard,
     href: '/dashboard',
+    module: null,
   },
   {
     title: 'Organization',
     icon: Building2,
     href: '/dashboard/organization',
+    module: 'organization',
     items: [
       { title: 'Overview', href: '/dashboard/organization' },
       { title: 'Branches', href: '/dashboard/organization/branches' },
@@ -62,11 +67,13 @@ const navigationItems = [
     title: 'Users',
     icon: Users,
     href: '/dashboard/users',
+    module: 'users',
   },
   {
     title: 'Roles & Permissions',
     icon: Shield,
     href: '/dashboard/roles',
+    module: 'roles',
     items: [
       { title: 'Roles', href: '/dashboard/roles' },
       { title: 'Permissions', href: '/dashboard/roles/permissions' },
@@ -76,11 +83,16 @@ const navigationItems = [
     title: 'Audit Log',
     icon: FileText,
     href: '/dashboard/audit-log',
+    module: 'audit-log',
   },
 ]
 
-export function AppSidebar() {
+export function AppSidebar({ enabledModules = [] }: { enabledModules?: string[] }) {
   const pathname = usePathname()
+
+  const visibleItems = navigationItems.filter(
+    (item) => item.module === null || enabledModules.includes(item.module),
+  )
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -116,7 +128,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item) =>
+              {visibleItems.map((item) =>
                 item.items ? (
                   <Collapsible key={item.title} defaultOpen={isActive(item.href)} className="group/collapsible">
                     <SidebarMenuItem>
@@ -166,16 +178,12 @@ export function AppSidebar() {
                 <SidebarMenuButton size="lg">
                   <Avatar className="size-8">
                     <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                      {currentUser.name
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')
-                        .slice(0, 2)}
+                      <Settings className="size-4" />
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col gap-0.5 leading-none text-left">
-                    <span className="font-medium truncate">{currentUser.name}</span>
-                    <span className="text-xs text-muted-foreground truncate">{currentUser.email}</span>
+                    <span className="font-medium truncate">Quick Actions</span>
+                    <span className="text-xs text-muted-foreground truncate">Account & settings</span>
                   </div>
                   <ChevronDown className="ml-auto size-4" />
                 </SidebarMenuButton>
@@ -190,7 +198,10 @@ export function AppSidebar() {
                   Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive focus:text-destructive">
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => signOut({ callbackUrl: '/signin' })}
+                >
                   <LogOut className="mr-2 size-4" />
                   Sign out
                 </DropdownMenuItem>

@@ -1,45 +1,67 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Building2, Users, Shield, FileText, TrendingUp, Clock } from 'lucide-react'
-import { branches, departments, positions } from '@/lib/data/organization'
-import { users } from '@/lib/data/users'
-import { roles } from '@/lib/data/roles'
-import { getRecentAuditLogs } from '@/lib/data/audit-log'
 import { Badge } from '@/components/ui/badge'
 import { formatDistanceToNow } from 'date-fns'
+import { getBranches, getDepartments, getPositions } from '@/lib/services/organization/service'
+import { getUsers } from '@/lib/services/user/service'
+import { getRoles } from '@/lib/services/role/service'
+import { getRecentAuditLogs } from '@/lib/services/audit-log/service'
+import type { BranchDto, DepartmentDto, PositionDto } from '@/lib/entities/organization/schema'
+import type { UserDto } from '@/lib/entities/user/schema'
+import type { RoleDto } from '@/lib/entities/role/schema'
+import type { AuditLogDto } from '@/lib/entities/audit-log/schema'
 
-const stats = [
-  {
-    title: 'Total Branches',
-    value: branches.filter((b) => b.status === 'active').length,
-    total: branches.length,
-    icon: Building2,
-    description: 'Active branches',
-  },
-  {
-    title: 'Departments',
-    value: departments.filter((d) => d.status === 'active').length,
-    total: departments.length,
-    icon: Building2,
-    description: 'Active departments',
-  },
-  {
-    title: 'Total Users',
-    value: users.filter((u) => u.status === 'active').length,
-    total: users.length,
-    icon: Users,
-    description: 'Active users',
-  },
-  {
-    title: 'Roles',
-    value: roles.filter((r) => r.status === 'active').length,
-    total: roles.length,
-    icon: Shield,
-    description: 'Active roles',
-  },
-]
+// Each section is gated by its own module/permission. A user lacking a given
+// permission simply sees that section empty rather than the whole dashboard
+// erroring — so we resolve every source independently and swallow guard errors.
+async function safe<T>(p: Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await p
+  } catch {
+    return fallback
+  }
+}
 
-export default function DashboardPage() {
-  const recentLogs = getRecentAuditLogs(5)
+export default async function DashboardPage() {
+  const [branches, departments, positions, users, roles, recentLogs] = await Promise.all([
+    safe<BranchDto[]>(getBranches(), []),
+    safe<DepartmentDto[]>(getDepartments(), []),
+    safe<PositionDto[]>(getPositions(), []),
+    safe<UserDto[]>(getUsers(), []),
+    safe<RoleDto[]>(getRoles(), []),
+    safe<AuditLogDto[]>(getRecentAuditLogs(5), []),
+  ])
+
+  const stats = [
+    {
+      title: 'Total Branches',
+      value: branches.filter((b) => b.status === 'active').length,
+      total: branches.length,
+      icon: Building2,
+      description: 'Active branches',
+    },
+    {
+      title: 'Departments',
+      value: departments.filter((d) => d.status === 'active').length,
+      total: departments.length,
+      icon: Building2,
+      description: 'Active departments',
+    },
+    {
+      title: 'Total Users',
+      value: users.filter((u) => u.status === 'active').length,
+      total: users.length,
+      icon: Users,
+      description: 'Active users',
+    },
+    {
+      title: 'Roles',
+      value: roles.filter((r) => r.status === 'active').length,
+      total: roles.length,
+      icon: Shield,
+      description: 'Active roles',
+    },
+  ]
 
   return (
     <div className="space-y-6">
@@ -114,6 +136,9 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {recentLogs.length === 0 && (
+                <p className="text-sm text-muted-foreground">No recent activity.</p>
+              )}
               {recentLogs.map((log) => (
                 <div key={log.id} className="flex items-start gap-3 text-sm">
                   <FileText className="size-4 mt-0.5 text-muted-foreground shrink-0" />

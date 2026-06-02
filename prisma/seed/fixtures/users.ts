@@ -1,0 +1,20 @@
+// Seed fixtures migrated from lib/data/users.ts (v0 mock).
+// All seeded users share the dev password "password123" (hashed at seed time).
+
+export const userFixtures = [
+  { id: "user-001", branchId: "branch-001", departmentId: "dept-003", positionId: "pos-008", employeeCode: "EMP-001", name: "Ahmad Wijaya", email: "ahmad.wijaya@suryasynergy.com", phone: "+62 812 3456 7890", status: "ACTIVE" as const, lastLoginAt: new Date("2024-12-01T08:30:00"), createdAt: new Date("2020-01-15") },
+  { id: "user-002", branchId: "branch-001", departmentId: "dept-001", positionId: "pos-001", employeeCode: "EMP-002", name: "Siti Rahayu", email: "siti.rahayu@suryasynergy.com", phone: "+62 813 4567 8901", status: "ACTIVE" as const, lastLoginAt: new Date("2024-12-01T09:15:00"), createdAt: new Date("2020-02-01") },
+  { id: "user-003", branchId: "branch-001", departmentId: "dept-002", positionId: "pos-004", employeeCode: "EMP-003", name: "Budi Santoso", email: "budi.santoso@suryasynergy.com", phone: "+62 814 5678 9012", status: "ACTIVE" as const, lastLoginAt: new Date("2024-11-30T16:45:00"), createdAt: new Date("2020-03-10") },
+  { id: "user-004", branchId: "branch-001", departmentId: "dept-004", positionId: "pos-012", employeeCode: "EMP-004", name: "Dewi Lestari", email: "dewi.lestari@suryasynergy.com", phone: "+62 815 6789 0123", status: "ACTIVE" as const, lastLoginAt: new Date("2024-12-01T07:00:00"), createdAt: new Date("2020-04-05") },
+  { id: "user-005", branchId: "branch-002", departmentId: "dept-006", positionId: "pos-013", employeeCode: "EMP-005", name: "Eko Prasetyo", email: "eko.prasetyo@suryasynergy.com", phone: "+62 816 7890 1234", status: "ACTIVE" as const, lastLoginAt: new Date("2024-11-29T14:30:00"), createdAt: new Date("2021-04-01") },
+  { id: "user-006", branchId: "branch-001", departmentId: "dept-003", positionId: "pos-009", employeeCode: "EMP-006", name: "Fitri Handayani", email: "fitri.handayani@suryasynergy.com", phone: "+62 817 8901 2345", status: "INACTIVE" as const, lastLoginAt: new Date("2024-09-15T10:00:00"), createdAt: new Date("2021-06-15") },
+  { id: "user-007", branchId: "branch-001", departmentId: "dept-003", positionId: "pos-010", employeeCode: "EMP-007", name: "Gunawan Putra", email: "gunawan.putra@suryasynergy.com", phone: "+62 818 9012 3456", status: "ACTIVE" as const, lastLoginAt: new Date("2024-12-01T08:00:00"), createdAt: new Date("2021-09-01") },
+  { id: "user-008", branchId: "branch-003", departmentId: "dept-007", positionId: "pos-014", employeeCode: "EMP-008", name: "Hana Permata", email: "hana.permata@suryasynergy.com", phone: "+62 819 0123 4567", status: "ACTIVE" as const, lastLoginAt: new Date("2024-11-28T11:30:00"), createdAt: new Date("2022-08-01") },
+  { id: "user-009", branchId: "branch-001", departmentId: "dept-002", positionId: "pos-006", employeeCode: "EMP-009", name: "Irfan Maulana", email: "irfan.maulana@suryasynergy.com", phone: "+62 821 1234 5678", status: "SUSPENDED" as const, lastLoginAt: new Date("2024-10-01T09:00:00"), createdAt: new Date("2022-02-15") },
+  { id: "user-010", branchId: "branch-001", departmentId: "dept-001", positionId: "pos-002", employeeCode: "EMP-010", name: "Julia Kartika", email: "julia.kartika@suryasynergy.com", phone: "+62 822 2345 6789", status: "ACTIVE" as const, lastLoginAt: new Date("2024-12-01T08:45:00"), createdAt: new Date("2022-05-01") },
+  { id: "user-011", branchId: "branch-001", departmentId: "dept-003", positionId: "pos-011", employeeCode: "EMP-011", name: "Kevin Pratama", email: "kevin.pratama@suryasynergy.com", phone: "+62 823 3456 7890", status: "ACTIVE" as const, lastLoginAt: new Date("2024-11-30T17:30:00"), createdAt: new Date("2023-01-10") },
+  { id: "user-012", branchId: "branch-001", departmentId: "dept-004", positionId: "pos-013", employeeCode: "EMP-012", name: "Lisa Anggraini", email: "lisa.anggraini@suryasynergy.com", phone: "+62 824 4567 8901", status: "ACTIVE" as const, lastLoginAt: new Date("2024-12-01T09:30:00"), createdAt: new Date("2023-03-15") },
+]
+
+// Default dev password for every seeded user. CHANGE in real deployments.
+export const DEFAULT_DEV_PASSWORD = "password123"

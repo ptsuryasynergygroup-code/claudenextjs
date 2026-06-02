@@ -1,5 +1,3 @@
-'use client'
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,19 +11,38 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ArrowLeft, Save } from 'lucide-react'
-import { roles, permissions, rolePermissions, hasPermission } from '@/lib/data/roles'
-import { MODULES, ACTIONS } from '@/lib/types'
 import Link from 'next/link'
+import { getRoles, getPermissions, getRolePermissions } from '@/lib/services/role/service'
 
-// Group permissions by module
-const permissionsByModule = MODULES.map((module) => ({
-  module,
-  actions: ACTIONS.filter((action) =>
-    permissions.some((p) => p.module === module && p.action === action)
-  ),
-}))
+export default async function PermissionsPage() {
+  const [roles, permissions] = await Promise.all([getRoles(), getPermissions()])
 
-export default function PermissionsPage() {
+  // Per-role granted permission codes → fast membership lookup for the matrix.
+  const grantedByRole = Object.fromEntries(
+    await Promise.all(
+      roles.map(async (r) => {
+        const perms = await getRolePermissions(r.id)
+        return [r.id, new Set(perms.map((p) => p.code))] as const
+      }),
+    ),
+  )
+
+  // Group permissions by module, preserving discovered action order.
+  const moduleOrder: string[] = []
+  const actionsByModule: Record<string, string[]> = {}
+  for (const p of permissions) {
+    if (!actionsByModule[p.module]) {
+      actionsByModule[p.module] = []
+      moduleOrder.push(p.module)
+    }
+    if (!actionsByModule[p.module].includes(p.action)) {
+      actionsByModule[p.module].push(p.action)
+    }
+  }
+
+  const has = (roleId: string, module: string, action: string) =>
+    grantedByRole[roleId]?.has(`${module}.${action}`) ?? false
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -74,35 +91,30 @@ export default function PermissionsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {permissionsByModule.map((moduleGroup) => (
+                {moduleOrder.map((module) => (
                   <>
-                    {/* Module Header Row */}
-                    <TableRow key={`header-${moduleGroup.module}`} className="bg-muted/50">
+                    <TableRow key={`header-${module}`} className="bg-muted/50">
                       <TableCell className="sticky left-0 bg-muted/50 font-medium capitalize">
-                        {moduleGroup.module.replace('-', ' ')}
+                        {module.replace('-', ' ')}
                       </TableCell>
                       {roles.map((role) => (
-                        <TableCell key={`${moduleGroup.module}-${role.id}-header`} />
+                        <TableCell key={`${module}-${role.id}-header`} />
                       ))}
                     </TableRow>
-                    {/* Action Rows */}
-                    {moduleGroup.actions.map((action) => (
-                      <TableRow key={`${moduleGroup.module}-${action}`}>
+                    {actionsByModule[module].map((action) => (
+                      <TableRow key={`${module}-${action}`}>
                         <TableCell className="sticky left-0 bg-background pl-8 text-sm text-muted-foreground capitalize">
                           {action}
                         </TableCell>
-                        {roles.map((role) => {
-                          const hasAccess = hasPermission(role.id, moduleGroup.module, action)
-                          return (
-                            <TableCell key={`${moduleGroup.module}-${action}-${role.id}`} className="text-center">
-                              <Checkbox
-                                checked={hasAccess}
-                                disabled={role.isSystem}
-                                className="mx-auto"
-                              />
-                            </TableCell>
-                          )
-                        })}
+                        {roles.map((role) => (
+                          <TableCell key={`${module}-${action}-${role.id}`} className="text-center">
+                            <Checkbox
+                              checked={has(role.id, module, action)}
+                              disabled
+                              className="mx-auto"
+                            />
+                          </TableCell>
+                        ))}
                       </TableRow>
                     ))}
                   </>
@@ -116,14 +128,10 @@ export default function PermissionsPage() {
       {/* Permission Summary */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {roles.slice(0, 4).map((role) => {
-          const rolePerms = rolePermissions.filter((rp) => rp.roleId === role.id)
+          const granted = grantedByRole[role.id] ?? new Set<string>()
           const moduleCount = new Set(
-            rolePerms.map((rp) => {
-              const perm = permissions.find((p) => p.id === rp.permissionId)
-              return perm?.module
-            })
+            [...granted].map((code) => code.split('.')[0]),
           ).size
-
           return (
             <Card key={role.id}>
               <CardHeader className="pb-2">
@@ -138,7 +146,7 @@ export default function PermissionsPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Permissions</span>
-                    <span className="font-medium">{rolePerms.length}</span>
+                    <span className="font-medium">{granted.size}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Modules</span>
