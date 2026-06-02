@@ -37,6 +37,8 @@ const MODULES = [
   { code: "users", name: "User Management", description: "Users and authentication", dependencies: [] as string[] },
   { code: "roles", name: "Roles & Permissions", description: "RBAC matrix", dependencies: ["users"] },
   { code: "audit-log", name: "Audit Log", description: "Activity tracking", dependencies: ["users"] },
+  { code: "workflows", name: "Workflow Engine", description: "Approval flows, SLA, escalation", dependencies: ["users", "roles"] },
+  { code: "notifications", name: "Notification", description: "In-app notifications", dependencies: ["users"] },
 ]
 
 // Permission matrix per module. Audit-log is append-only (no create/edit/delete).
@@ -45,6 +47,8 @@ const PERMISSION_MATRIX: Array<{ module: string; actions: string[] }> = [
   { module: "users", actions: ["view", "create", "edit", "delete", "suspend"] },
   { module: "roles", actions: ["view", "create", "edit", "delete"] },
   { module: "audit-log", actions: ["view", "export"] },
+  { module: "workflows", actions: ["view", "create", "edit", "delete", "approve"] },
+  { module: "notifications", actions: ["view"] },
 ]
 
 async function main() {
@@ -199,6 +203,43 @@ async function main() {
       update: {},
       create: { ...log, organizationId: org.id },
     })
+  }
+
+  const finManager = await prisma.role.findFirst({ where: { id: "role-004" } })
+  const deptHead = await prisma.role.findFirst({ where: { id: "role-005" } })
+  if (finManager && deptHead) {
+    const existingWf = await prisma.workflow.findFirst({
+      where: { organizationId: org.id, entityType: "purchase-request" },
+    })
+    if (!existingWf) {
+      await prisma.workflow.create({
+        data: {
+          organizationId: org.id,
+          name: "Purchase Request Approval",
+          description: "Two-step approval for purchase requests",
+          entityType: "purchase-request",
+          status: "ACTIVE",
+          steps: {
+            create: [
+              {
+                stepOrder: 1,
+                name: "Department Head Approval",
+                slaHours: 24,
+                escalationHours: 48,
+                approvers: { create: [{ roleId: deptHead.id }] },
+              },
+              {
+                stepOrder: 2,
+                name: "Finance Manager Approval",
+                slaHours: 24,
+                escalationHours: 48,
+                approvers: { create: [{ roleId: finManager.id }] },
+              },
+            ],
+          },
+        },
+      })
+    }
   }
 
   console.log("[seed] done")

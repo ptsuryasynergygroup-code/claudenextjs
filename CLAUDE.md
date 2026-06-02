@@ -8,6 +8,23 @@ Bootstrapped on Vercel v0, continued in Claude Code.
 2. `EOS_Foundation_ERD.txt` — entity relationships
 3. `EOS_Core_Business_Entities_Spec.txt` — domain taxonomy & build phases
 
+# Rules for every session
+1. Read files before writing. No assumptions.
+2. Plan in plan mode first for multi-file changes.
+3. Make the minimum edits required. No refactors unless asked.
+4. No explanatory comments in code.
+5. No summaries after edits — just confirm done.
+6. Batch all related file edits into one operation.
+7. Run `pnpm typecheck && pnpm build` to verify, not the full test suite.
+8. Use subagents to research unfamiliar parts of the codebase.
+9. claude code will always try to make session efficient
+10. user didnt test before all phase is done but user review so user need claude code coding this project automaticly and claude pick which option is recommended so it can automatically run till it reach next phase
+
+# Behavior
+1. Think thoroughly before writing any code
+2. Do NOT add files, functions, or code that weren't explicitly requested in plan
+
+
 If a request conflicts with `EOS_PRD_FOR_CLAUDE.md`, surface the conflict to the user before coding.
 
 ## Non-negotiables (full list in PRD §1)
@@ -77,3 +94,4 @@ Run them before declaring a module done.
 - Mass UI refactor of v0 pages
 - AI features (Phase 7)
 - i18n library
+

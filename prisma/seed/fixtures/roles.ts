@@ -24,13 +24,15 @@ export const rolePermissionFixtures: Record<string, string[] | "*"> = {
     "users.view", "users.create", "users.edit", "users.delete", "users.suspend",
     "roles.view", "roles.create", "roles.edit", // not roles.delete
     "audit-log.view", "audit-log.export",
+    "workflows.view", "workflows.create", "workflows.edit", "workflows.delete", "workflows.approve",
+    "notifications.view",
   ],
-  "role-003": ["organization.view", "users.view", "users.create", "users.edit"], // HR Manager
-  "role-004": ["organization.view", "users.view", "audit-log.view", "audit-log.export"], // Finance Manager
-  "role-005": ["organization.view", "users.view"], // Department Head
-  "role-006": ["organization.view"], // Employee
-  "role-007": ["organization.view", "users.view", "roles.view", "audit-log.view", "audit-log.export"], // Auditor
-  "role-008": ["organization.view"], // Sales Rep
+  "role-003": ["organization.view", "users.view", "users.create", "users.edit", "workflows.view", "workflows.approve", "notifications.view"], // HR Manager
+  "role-004": ["organization.view", "users.view", "audit-log.view", "audit-log.export", "workflows.view", "workflows.approve", "notifications.view"], // Finance Manager
+  "role-005": ["organization.view", "users.view", "workflows.view", "workflows.approve", "notifications.view"], // Department Head
+  "role-006": ["organization.view", "notifications.view"], // Employee
+  "role-007": ["organization.view", "users.view", "roles.view", "audit-log.view", "audit-log.export", "workflows.view", "notifications.view"], // Auditor
+  "role-008": ["organization.view", "notifications.view"], // Sales Rep
 }
 
 // userId → roleId[] (from mock userRoles).

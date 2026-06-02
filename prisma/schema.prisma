@@ -46,6 +46,9 @@ model Organization {
   organizationPackages  OrganizationPackage[]
   organizationModules   OrganizationModule[]
   organizationFeatures  OrganizationFeature[]
+  workflows             Workflow[]
+  workflowInstances     WorkflowInstance[]
+  notifications         Notification[]
 
   @@index([deletedAt])
   @@map("organizations")
@@ -458,4 +461,126 @@ model OrganizationFeature {
   @@id([organizationId, featureId])
   @@index([featureId])
   @@map("organization_features")
+}
+
+enum WorkflowInstanceStatus {
+  PENDING   @map("pending")
+  APPROVED  @map("approved")
+  REJECTED  @map("rejected")
+  CANCELLED @map("cancelled")
+
+  @@map("workflow_instance_status")
+}
+
+enum ApprovalDecision {
+  APPROVE @map("approve")
+  REJECT  @map("reject")
+
+  @@map("approval_decision")
+}
+
+model Workflow {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  name           String
+  description    String?
+  entityType     String       @map("entity_type")
+  status         EntityStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  deletedAt      DateTime?    @map("deleted_at")
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  steps        WorkflowStep[]
+  instances    WorkflowInstance[]
+
+  @@unique([organizationId, entityType])
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("workflows")
+}
+
+model WorkflowStep {
+  id              String  @id @default(cuid())
+  workflowId      String  @map("workflow_id")
+  stepOrder       Int     @map("step_order")
+  name            String
+  slaHours        Int?    @map("sla_hours")
+  escalationHours Int?    @map("escalation_hours")
+
+  workflow  Workflow           @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  approvers WorkflowApprover[]
+
+  @@unique([workflowId, stepOrder])
+  @@index([workflowId])
+  @@map("workflow_steps")
+}
+
+model WorkflowApprover {
+  id             String  @id @default(cuid())
+  workflowStepId String  @map("workflow_step_id")
+  roleId         String? @map("role_id")
+  userId         String? @map("user_id")
+
+  step WorkflowStep @relation(fields: [workflowStepId], references: [id], onDelete: Cascade)
+
+  @@index([workflowStepId])
+  @@map("workflow_approvers")
+}
+
+model WorkflowInstance {
+  id               String                 @id @default(cuid())
+  organizationId   String                 @map("organization_id")
+  workflowId       String                 @map("workflow_id")
+  entityType       String                 @map("entity_type")
+  entityId         String                 @map("entity_id")
+  status           WorkflowInstanceStatus @default(PENDING)
+  currentStepOrder Int                    @default(1) @map("current_step_order")
+  startedBy        String                 @map("started_by")
+  createdAt        DateTime               @default(now()) @map("created_at")
+  updatedAt        DateTime               @updatedAt @map("updated_at")
+  completedAt      DateTime?              @map("completed_at")
+
+  organization Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  workflow     Workflow         @relation(fields: [workflowId], references: [id], onDelete: Restrict)
+  actions      ApprovalAction[]
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, entityType, entityId])
+  @@map("workflow_instances")
+}
+
+model ApprovalAction {
+  id         String           @id @default(cuid())
+  instanceId String           @map("instance_id")
+  stepOrder  Int              @map("step_order")
+  actorId    String           @map("actor_id")
+  decision   ApprovalDecision
+  comment    String?
+  createdAt  DateTime         @default(now()) @map("created_at")
+
+  instance WorkflowInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@index([instanceId])
+  @@map("approval_actions")
+}
+
+model Notification {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  userId         String    @map("user_id")
+  title          String
+  message        String
+  channel        String    @default("in_app")
+  entityType     String?   @map("entity_type")
+  entityId       String?   @map("entity_id")
+  readAt         DateTime? @map("read_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, userId, readAt])
+  @@index([organizationId, createdAt])
+  @@map("notifications")
 }
