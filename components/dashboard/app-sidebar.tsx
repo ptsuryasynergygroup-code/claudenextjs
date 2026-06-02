@@ -21,6 +21,10 @@ import {
   ShoppingCart,
   Contact,
   Receipt,
+  Package,
+  Boxes,
+  ShieldAlert,
+  BarChart3,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -115,6 +119,30 @@ const navigationItems = [
     icon: Receipt,
     href: '/dashboard/sales',
     module: 'sales',
+  },
+  {
+    title: 'Inventory',
+    icon: Package,
+    href: '/dashboard/inventory',
+    module: 'inventory',
+  },
+  {
+    title: 'Assets',
+    icon: Boxes,
+    href: '/dashboard/assets',
+    module: 'assets',
+  },
+  {
+    title: 'Risk',
+    icon: ShieldAlert,
+    href: '/dashboard/risk',
+    module: 'risk',
+  },
+  {
+    title: 'Analytics',
+    icon: BarChart3,
+    href: '/dashboard/analytics',
+    module: 'analytics',
   },
   {
     title: 'Documents',

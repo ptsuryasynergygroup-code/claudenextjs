@@ -33,12 +33,16 @@ export const rolePermissionFixtures: Record<string, string[] | "*"> = {
     "procurement.view", "procurement.create", "procurement.edit", "procurement.delete", "procurement.approve",
     "crm.view", "crm.create", "crm.edit", "crm.delete",
     "sales.view", "sales.create", "sales.edit", "sales.delete",
+    "inventory.view", "inventory.create", "inventory.edit", "inventory.delete",
+    "assets.view", "assets.create", "assets.edit", "assets.delete",
+    "risk.view", "risk.create", "risk.edit", "risk.delete",
+    "analytics.view", "analytics.create", "analytics.edit", "analytics.delete",
   ],
   "role-003": ["organization.view", "users.view", "users.create", "users.edit", "workflows.view", "workflows.approve", "notifications.view", "documents.view", "documents.create", "documents.edit", "tasks.view", "tasks.create", "tasks.edit", "hr.view", "hr.create", "hr.edit", "hr.delete", "hr.approve"], // HR Manager
   "role-004": ["organization.view", "users.view", "audit-log.view", "audit-log.export", "workflows.view", "workflows.approve", "notifications.view", "documents.view", "documents.create", "tasks.view", "finance.view", "finance.create", "finance.edit", "finance.delete", "procurement.view", "procurement.approve"], // Finance Manager
   "role-005": ["organization.view", "users.view", "workflows.view", "workflows.approve", "notifications.view", "documents.view", "documents.create", "tasks.view", "tasks.create", "tasks.edit", "procurement.view", "procurement.create"], // Department Head
   "role-006": ["organization.view", "notifications.view", "documents.view", "documents.create", "tasks.view", "tasks.create"], // Employee
-  "role-007": ["organization.view", "users.view", "roles.view", "audit-log.view", "audit-log.export", "workflows.view", "notifications.view", "documents.view", "tasks.view", "procurement.view", "crm.view", "sales.view"], // Auditor
+  "role-007": ["organization.view", "users.view", "roles.view", "audit-log.view", "audit-log.export", "workflows.view", "notifications.view", "documents.view", "tasks.view", "procurement.view", "crm.view", "sales.view", "inventory.view", "assets.view", "risk.view", "analytics.view"], // Auditor
   "role-008": ["organization.view", "notifications.view", "documents.view", "documents.create", "tasks.view", "tasks.create", "tasks.edit", "crm.view", "crm.create", "crm.edit", "crm.delete", "sales.view", "sales.create", "sales.edit", "sales.delete"], // Sales Rep
 }
 

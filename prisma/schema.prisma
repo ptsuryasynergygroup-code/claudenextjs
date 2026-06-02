@@ -67,6 +67,15 @@ model Organization {
   opportunities         Opportunity[]
   quotations            Quotation[]
   salesOrders           SalesOrder[]
+  products              Product[]
+  warehouses            Warehouse[]
+  stocks                Stock[]
+  stockMovements        StockMovement[]
+  assets                Asset[]
+  assetMaintenances     AssetMaintenance[]
+  risks                 Risk[]
+  riskControls          RiskControl[]
+  kpis                  Kpi[]
 
   @@index([deletedAt])
   @@map("organizations")
@@ -1142,4 +1151,228 @@ model SalesOrder {
   @@index([organizationId])
   @@index([organizationId, deletedAt])
   @@map("sales_orders")
+}
+
+model Product {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  sku            String
+  name           String
+  category       String?
+  unit           String       @default("pcs")
+  status         EntityStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  deletedAt      DateTime?    @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  stocks       Stock[]
+
+  @@unique([organizationId, sku])
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("products")
+}
+
+model Warehouse {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  code           String
+  name           String
+  location       String?
+  status         EntityStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  deletedAt      DateTime?    @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  stocks       Stock[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("warehouses")
+}
+
+model Stock {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  productId      String   @map("product_id")
+  warehouseId    String   @map("warehouse_id")
+  quantity       Int      @default(0)
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  product      Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse    Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, warehouseId])
+  @@index([organizationId])
+  @@map("stocks")
+}
+
+enum StockMovementType {
+  IN     @map("in")
+  OUT    @map("out")
+  ADJUST @map("adjust")
+
+  @@map("stock_movement_type")
+}
+
+model StockMovement {
+  id             String            @id @default(cuid())
+  organizationId String            @map("organization_id")
+  productId      String            @map("product_id")
+  warehouseId    String            @map("warehouse_id")
+  type           StockMovementType
+  quantity       Int
+  reference      String?
+  createdBy      String            @map("created_by")
+  createdAt      DateTime          @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([organizationId, productId])
+  @@map("stock_movements")
+}
+
+enum AssetStatus {
+  ACTIVE      @map("active")
+  MAINTENANCE @map("maintenance")
+  DISPOSED    @map("disposed")
+
+  @@map("asset_status")
+}
+
+enum DepreciationMethod {
+  NONE          @map("none")
+  STRAIGHT_LINE @map("straight_line")
+
+  @@map("depreciation_method")
+}
+
+model Asset {
+  id                 String             @id @default(cuid())
+  organizationId     String             @map("organization_id")
+  code               String
+  name               String
+  category           String?
+  acquisitionDate    DateTime           @map("acquisition_date")
+  acquisitionCost    Int                @default(0) @map("acquisition_cost")
+  usefulLifeMonths   Int?               @map("useful_life_months")
+  depreciationMethod DepreciationMethod @default(NONE) @map("depreciation_method")
+  status             AssetStatus        @default(ACTIVE)
+  assignedToId       String?            @map("assigned_to_id")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  deletedAt          DateTime?          @map("deleted_at")
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  maintenances AssetMaintenance[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("assets")
+}
+
+enum MaintenanceStatus {
+  SCHEDULED @map("scheduled")
+  DONE      @map("done")
+  CANCELLED @map("cancelled")
+
+  @@map("maintenance_status")
+}
+
+model AssetMaintenance {
+  id             String            @id @default(cuid())
+  organizationId String            @map("organization_id")
+  assetId        String            @map("asset_id")
+  scheduledDate  DateTime          @map("scheduled_date")
+  description    String?
+  cost           Int?
+  status         MaintenanceStatus @default(SCHEDULED)
+  createdAt      DateTime          @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  asset        Asset        @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, assetId])
+  @@map("asset_maintenances")
+}
+
+enum RiskLevel {
+  LOW    @map("low")
+  MEDIUM @map("medium")
+  HIGH   @map("high")
+
+  @@map("risk_level")
+}
+
+enum RiskStatus {
+  OPEN      @map("open")
+  MITIGATED @map("mitigated")
+  CLOSED    @map("closed")
+
+  @@map("risk_status")
+}
+
+model Risk {
+  id             String     @id @default(cuid())
+  organizationId String     @map("organization_id")
+  title          String
+  category       String?
+  likelihood     RiskLevel  @default(MEDIUM)
+  impact         RiskLevel  @default(MEDIUM)
+  status         RiskStatus @default(OPEN)
+  ownerId        String?    @map("owner_id")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  deletedAt      DateTime?  @map("deleted_at")
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  controls     RiskControl[]
+
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("risks")
+}
+
+model RiskControl {
+  id             String     @id @default(cuid())
+  organizationId String     @map("organization_id")
+  riskId         String     @map("risk_id")
+  name           String
+  description    String?
+  effectiveness  RiskLevel  @default(MEDIUM)
+  createdAt      DateTime   @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  risk         Risk         @relation(fields: [riskId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, riskId])
+  @@map("risk_controls")
+}
+
+model Kpi {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  name           String
+  metric         String?
+  target         Int       @default(0)
+  current        Int       @default(0)
+  unit           String?
+  period         String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("kpis")
 }
