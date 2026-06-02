@@ -59,6 +59,14 @@ model Organization {
   transactions          Transaction[]
   invoices              Invoice[]
   payments              Payment[]
+  vendors               Vendor[]
+  purchaseRequests      PurchaseRequest[]
+  purchaseOrders        PurchaseOrder[]
+  customers             Customer[]
+  leads                 Lead[]
+  opportunities         Opportunity[]
+  quotations            Quotation[]
+  salesOrders           SalesOrder[]
 
   @@index([deletedAt])
   @@map("organizations")
@@ -918,4 +926,220 @@ model Payment {
   @@index([organizationId])
   @@index([organizationId, invoiceId])
   @@map("payments")
+}
+
+model Vendor {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  name           String
+  /// @pii
+  taxNumber      String?      @map("tax_number")
+  /// @pii
+  phone          String?
+  /// @pii
+  email          String?
+  status         EntityStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  deletedAt      DateTime?    @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("vendors")
+}
+
+enum PurchaseRequestStatus {
+  DRAFT    @map("draft")
+  PENDING  @map("pending")
+  APPROVED @map("approved")
+  REJECTED @map("rejected")
+
+  @@map("purchase_request_status")
+}
+
+model PurchaseRequest {
+  id             String                @id @default(cuid())
+  organizationId String                @map("organization_id")
+  number         String
+  requesterId    String                @map("requester_id")
+  status         PurchaseRequestStatus @default(DRAFT)
+  totalAmount    Int                   @default(0) @map("total_amount")
+  notes          String?
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+  deletedAt      DateTime?             @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, number])
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("purchase_requests")
+}
+
+enum PurchaseOrderStatus {
+  DRAFT     @map("draft")
+  SENT      @map("sent")
+  RECEIVED  @map("received")
+  CLOSED    @map("closed")
+  CANCELLED @map("cancelled")
+
+  @@map("purchase_order_status")
+}
+
+model PurchaseOrder {
+  id                String              @id @default(cuid())
+  organizationId    String              @map("organization_id")
+  number            String
+  vendorId          String              @map("vendor_id")
+  purchaseRequestId String?             @map("purchase_request_id")
+  status            PurchaseOrderStatus @default(DRAFT)
+  totalAmount       Int                 @default(0) @map("total_amount")
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+  deletedAt         DateTime?           @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, number])
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("purchase_orders")
+}
+
+model Customer {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  name           String
+  /// @pii
+  phone          String?
+  /// @pii
+  email          String?
+  status         EntityStatus @default(ACTIVE)
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  deletedAt      DateTime?    @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("customers")
+}
+
+enum LeadStatus {
+  NEW       @map("new")
+  CONTACTED @map("contacted")
+  QUALIFIED @map("qualified")
+  LOST      @map("lost")
+
+  @@map("lead_status")
+}
+
+model Lead {
+  id             String     @id @default(cuid())
+  organizationId String     @map("organization_id")
+  name           String
+  source         String?
+  status         LeadStatus @default(NEW)
+  ownerId        String?    @map("owner_id")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  deletedAt      DateTime?  @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("leads")
+}
+
+enum OpportunityStage {
+  PROSPECTING @map("prospecting")
+  PROPOSAL    @map("proposal")
+  NEGOTIATION @map("negotiation")
+  WON         @map("won")
+  LOST        @map("lost")
+
+  @@map("opportunity_stage")
+}
+
+model Opportunity {
+  id             String           @id @default(cuid())
+  organizationId String           @map("organization_id")
+  name           String
+  customerId     String?          @map("customer_id")
+  leadId         String?          @map("lead_id")
+  stage          OpportunityStage @default(PROSPECTING)
+  amount         Int              @default(0)
+  ownerId        String?          @map("owner_id")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  deletedAt      DateTime?        @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("opportunities")
+}
+
+enum QuotationStatus {
+  DRAFT    @map("draft")
+  SENT     @map("sent")
+  ACCEPTED @map("accepted")
+  REJECTED @map("rejected")
+
+  @@map("quotation_status")
+}
+
+model Quotation {
+  id             String          @id @default(cuid())
+  organizationId String          @map("organization_id")
+  number         String
+  customerId     String          @map("customer_id")
+  amount         Int             @default(0)
+  status         QuotationStatus @default(DRAFT)
+  validUntil     DateTime?       @map("valid_until")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  deletedAt      DateTime?       @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, number])
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("quotations")
+}
+
+enum SalesOrderStatus {
+  DRAFT     @map("draft")
+  CONFIRMED @map("confirmed")
+  FULFILLED @map("fulfilled")
+  CANCELLED @map("cancelled")
+
+  @@map("sales_order_status")
+}
+
+model SalesOrder {
+  id             String           @id @default(cuid())
+  organizationId String           @map("organization_id")
+  number         String
+  customerId     String           @map("customer_id")
+  quotationId    String?          @map("quotation_id")
+  amount         Int              @default(0)
+  status         SalesOrderStatus @default(DRAFT)
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  deletedAt      DateTime?        @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, number])
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("sales_orders")
 }

@@ -18,6 +18,9 @@ import {
   CheckSquare,
   UserCog,
   Wallet,
+  ShoppingCart,
+  Contact,
+  Receipt,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -94,6 +97,24 @@ const navigationItems = [
     icon: Wallet,
     href: '/dashboard/finance',
     module: 'finance',
+  },
+  {
+    title: 'Procurement',
+    icon: ShoppingCart,
+    href: '/dashboard/procurement',
+    module: 'procurement',
+  },
+  {
+    title: 'CRM',
+    icon: Contact,
+    href: '/dashboard/crm',
+    module: 'crm',
+  },
+  {
+    title: 'Sales',
+    icon: Receipt,
+    href: '/dashboard/sales',
+    module: 'sales',
   },
   {
     title: 'Documents',
