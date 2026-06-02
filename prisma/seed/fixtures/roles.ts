@@ -28,9 +28,11 @@ export const rolePermissionFixtures: Record<string, string[] | "*"> = {
     "notifications.view",
     "documents.view", "documents.create", "documents.edit", "documents.delete",
     "tasks.view", "tasks.create", "tasks.edit", "tasks.delete",
+    "hr.view", "hr.create", "hr.edit", "hr.delete", "hr.approve",
+    "finance.view", "finance.create", "finance.edit", "finance.delete",
   ],
-  "role-003": ["organization.view", "users.view", "users.create", "users.edit", "workflows.view", "workflows.approve", "notifications.view", "documents.view", "documents.create", "documents.edit", "tasks.view", "tasks.create", "tasks.edit"], // HR Manager
-  "role-004": ["organization.view", "users.view", "audit-log.view", "audit-log.export", "workflows.view", "workflows.approve", "notifications.view", "documents.view", "documents.create", "tasks.view"], // Finance Manager
+  "role-003": ["organization.view", "users.view", "users.create", "users.edit", "workflows.view", "workflows.approve", "notifications.view", "documents.view", "documents.create", "documents.edit", "tasks.view", "tasks.create", "tasks.edit", "hr.view", "hr.create", "hr.edit", "hr.delete", "hr.approve"], // HR Manager
+  "role-004": ["organization.view", "users.view", "audit-log.view", "audit-log.export", "workflows.view", "workflows.approve", "notifications.view", "documents.view", "documents.create", "tasks.view", "finance.view", "finance.create", "finance.edit", "finance.delete"], // Finance Manager
   "role-005": ["organization.view", "users.view", "workflows.view", "workflows.approve", "notifications.view", "documents.view", "documents.create", "tasks.view", "tasks.create", "tasks.edit"], // Department Head
   "role-006": ["organization.view", "notifications.view", "documents.view", "documents.create", "tasks.view", "tasks.create"], // Employee
   "role-007": ["organization.view", "users.view", "roles.view", "audit-log.view", "audit-log.export", "workflows.view", "notifications.view", "documents.view", "tasks.view"], // Auditor

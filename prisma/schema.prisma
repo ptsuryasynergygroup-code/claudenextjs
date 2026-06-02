@@ -52,6 +52,13 @@ model Organization {
   documents             Document[]
   projects              Project[]
   tasks                 Task[]
+  employees             Employee[]
+  attendances           Attendance[]
+  leaveRequests         LeaveRequest[]
+  accounts              LedgerAccount[]
+  transactions          Transaction[]
+  invoices              Invoice[]
+  payments              Payment[]
 
   @@index([deletedAt])
   @@map("organizations")
@@ -722,4 +729,193 @@ model Task {
   @@index([organizationId, deletedAt])
   @@index([organizationId, assignedToId])
   @@map("tasks")
+}
+
+enum EmploymentStatus {
+  PERMANENT  @map("permanent")
+  CONTRACT   @map("contract")
+  PROBATION  @map("probation")
+  TERMINATED @map("terminated")
+
+  @@map("employment_status")
+}
+
+model Employee {
+  id               String           @id @default(cuid())
+  organizationId   String           @map("organization_id")
+  userId           String?          @unique @map("user_id")
+  employeeCode     String           @map("employee_code")
+  joinDate         DateTime         @map("join_date")
+  employmentStatus EmploymentStatus @default(PERMANENT) @map("employment_status")
+  /// @pii
+  basicSalary      Int?             @map("basic_salary")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+  deletedAt        DateTime?        @map("deleted_at")
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  attendances   Attendance[]
+  leaveRequests LeaveRequest[]
+
+  @@unique([organizationId, employeeCode])
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("employees")
+}
+
+model Attendance {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  employeeId     String    @map("employee_id")
+  date           DateTime
+  clockIn        DateTime? @map("clock_in")
+  clockOut       DateTime? @map("clock_out")
+  status         String    @default("present")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee     Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, date])
+  @@index([organizationId])
+  @@index([organizationId, employeeId])
+  @@map("attendances")
+}
+
+enum LeaveStatus {
+  PENDING  @map("pending")
+  APPROVED @map("approved")
+  REJECTED @map("rejected")
+
+  @@map("leave_status")
+}
+
+model LeaveRequest {
+  id             String      @id @default(cuid())
+  organizationId String      @map("organization_id")
+  employeeId     String      @map("employee_id")
+  leaveType      String      @map("leave_type")
+  startDate      DateTime    @map("start_date")
+  endDate        DateTime    @map("end_date")
+  reason         String?
+  status         LeaveStatus @default(PENDING)
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee     Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, employeeId])
+  @@map("leave_requests")
+}
+
+enum AccountType {
+  ASSET     @map("asset")
+  LIABILITY @map("liability")
+  EQUITY    @map("equity")
+  REVENUE   @map("revenue")
+  EXPENSE   @map("expense")
+
+  @@map("account_type")
+}
+
+model LedgerAccount {
+  id             String      @id @default(cuid())
+  organizationId String      @map("organization_id")
+  code           String
+  name           String
+  type           AccountType
+  parentId       String?     @map("parent_id")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+  deletedAt      DateTime?   @map("deleted_at")
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent       LedgerAccount?  @relation("LedgerAccountTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children     LedgerAccount[] @relation("LedgerAccountTree")
+  transactions Transaction[]
+
+  @@unique([organizationId, code])
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("ledger_accounts")
+}
+
+enum TransactionType {
+  DEBIT  @map("debit")
+  CREDIT @map("credit")
+
+  @@map("transaction_type")
+}
+
+model Transaction {
+  id              String          @id @default(cuid())
+  organizationId  String          @map("organization_id")
+  accountId       String          @map("account_id")
+  amount          Int
+  type            TransactionType
+  transactionDate DateTime        @map("transaction_date")
+  description     String?
+  reference       String?
+  createdBy       String          @map("created_by")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  account      LedgerAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([organizationId, accountId])
+  @@map("transactions")
+}
+
+enum InvoiceStatus {
+  DRAFT   @map("draft")
+  SENT    @map("sent")
+  PAID    @map("paid")
+  OVERDUE @map("overdue")
+  VOID    @map("void")
+
+  @@map("invoice_status")
+}
+
+model Invoice {
+  id             String        @id @default(cuid())
+  organizationId String        @map("organization_id")
+  number         String
+  customerName   String        @map("customer_name")
+  amount         Int           @default(0)
+  status         InvoiceStatus @default(DRAFT)
+  issueDate      DateTime      @map("issue_date")
+  dueDate        DateTime?     @map("due_date")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  deletedAt      DateTime?     @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  payments     Payment[]
+
+  @@unique([organizationId, number])
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("invoices")
+}
+
+model Payment {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  invoiceId      String?  @map("invoice_id")
+  amount         Int
+  method         String   @default("transfer")
+  paymentDate    DateTime @map("payment_date")
+  reference      String?
+  createdBy      String   @map("created_by")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  invoice      Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([organizationId, invoiceId])
+  @@map("payments")
 }

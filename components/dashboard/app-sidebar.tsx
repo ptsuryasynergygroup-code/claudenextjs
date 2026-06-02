@@ -16,6 +16,8 @@ import {
   Bell,
   GitBranch,
   CheckSquare,
+  UserCog,
+  Wallet,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -80,6 +82,18 @@ const navigationItems = [
       { title: 'Roles', href: '/dashboard/roles' },
       { title: 'Permissions', href: '/dashboard/roles/permissions' },
     ],
+  },
+  {
+    title: 'HR',
+    icon: UserCog,
+    href: '/dashboard/hr',
+    module: 'hr',
+  },
+  {
+    title: 'Finance',
+    icon: Wallet,
+    href: '/dashboard/finance',
+    module: 'finance',
   },
   {
     title: 'Documents',
