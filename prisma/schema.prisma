@@ -49,6 +49,9 @@ model Organization {
   workflows             Workflow[]
   workflowInstances     WorkflowInstance[]
   notifications         Notification[]
+  documents             Document[]
+  projects              Project[]
+  tasks                 Task[]
 
   @@index([deletedAt])
   @@map("organizations")
@@ -583,4 +586,140 @@ model Notification {
   @@index([organizationId, userId, readAt])
   @@index([organizationId, createdAt])
   @@map("notifications")
+}
+
+enum DocumentStatus {
+  DRAFT    @map("draft")
+  ACTIVE   @map("active")
+  ARCHIVED @map("archived")
+
+  @@map("document_status")
+}
+
+model Document {
+  id             String         @id @default(cuid())
+  organizationId String         @map("organization_id")
+  title          String
+  documentType   String         @map("document_type")
+  status         DocumentStatus @default(DRAFT)
+  uploadedBy     String         @map("uploaded_by")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  deletedAt      DateTime?      @map("deleted_at")
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  versions     DocumentVersion[]
+
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id         String   @id @default(cuid())
+  documentId String   @map("document_id")
+  version    Int
+  fileName   String   @map("file_name")
+  filePath   String   @map("file_path")
+  fileSize   Int      @default(0) @map("file_size")
+  mimeType   String   @map("mime_type")
+  notes      String?
+  createdBy  String   @map("created_by")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, version])
+  @@index([documentId])
+  @@map("document_versions")
+}
+
+enum ProjectStatus {
+  ACTIVE    @map("active")
+  ON_HOLD   @map("on_hold")
+  COMPLETED @map("completed")
+  CANCELLED @map("cancelled")
+
+  @@map("project_status")
+}
+
+model Project {
+  id             String        @id @default(cuid())
+  organizationId String        @map("organization_id")
+  name           String
+  description    String?
+  status         ProjectStatus @default(ACTIVE)
+  ownerId        String?       @map("owner_id")
+  startDate      DateTime?     @map("start_date")
+  endDate        DateTime?     @map("end_date")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  deletedAt      DateTime?     @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  milestones   Milestone[]
+  tasks        Task[]
+
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@map("projects")
+}
+
+model Milestone {
+  id        String    @id @default(cuid())
+  projectId String    @map("project_id")
+  name      String
+  dueDate   DateTime? @map("due_date")
+  sortOrder Int       @default(1) @map("sort_order")
+  completed Boolean   @default(false)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   Task[]
+
+  @@index([projectId])
+  @@map("milestones")
+}
+
+enum TaskStatus {
+  TODO        @map("todo")
+  IN_PROGRESS @map("in_progress")
+  DONE        @map("done")
+  CANCELLED   @map("cancelled")
+
+  @@map("task_status")
+}
+
+enum TaskPriority {
+  LOW    @map("low")
+  MEDIUM @map("medium")
+  HIGH   @map("high")
+
+  @@map("task_priority")
+}
+
+model Task {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  projectId      String?      @map("project_id")
+  milestoneId    String?      @map("milestone_id")
+  title          String
+  description    String?
+  assignedToId   String?      @map("assigned_to_id")
+  status         TaskStatus   @default(TODO)
+  priority       TaskPriority @default(MEDIUM)
+  dueDate        DateTime?    @map("due_date")
+  createdById    String       @map("created_by_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  deletedAt      DateTime?    @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  project      Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  milestone    Milestone?   @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([organizationId, deletedAt])
+  @@index([organizationId, assignedToId])
+  @@map("tasks")
 }

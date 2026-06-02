@@ -39,6 +39,8 @@ const MODULES = [
   { code: "audit-log", name: "Audit Log", description: "Activity tracking", dependencies: ["users"] },
   { code: "workflows", name: "Workflow Engine", description: "Approval flows, SLA, escalation", dependencies: ["users", "roles"] },
   { code: "notifications", name: "Notification", description: "In-app notifications", dependencies: ["users"] },
+  { code: "documents", name: "Document Management", description: "Documents and versioning", dependencies: ["users"] },
+  { code: "tasks", name: "Task & Project", description: "Tasks, projects, milestones", dependencies: ["users"] },
 ]
 
 // Permission matrix per module. Audit-log is append-only (no create/edit/delete).
@@ -49,6 +51,8 @@ const PERMISSION_MATRIX: Array<{ module: string; actions: string[] }> = [
   { module: "audit-log", actions: ["view", "export"] },
   { module: "workflows", actions: ["view", "create", "edit", "delete", "approve"] },
   { module: "notifications", actions: ["view"] },
+  { module: "documents", actions: ["view", "create", "edit", "delete"] },
+  { module: "tasks", actions: ["view", "create", "edit", "delete"] },
 ]
 
 async function main() {

@@ -15,6 +15,7 @@ import {
   LogOut,
   Bell,
   GitBranch,
+  CheckSquare,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -79,6 +80,18 @@ const navigationItems = [
       { title: 'Roles', href: '/dashboard/roles' },
       { title: 'Permissions', href: '/dashboard/roles/permissions' },
     ],
+  },
+  {
+    title: 'Documents',
+    icon: FileText,
+    href: '/dashboard/documents',
+    module: 'documents',
+  },
+  {
+    title: 'Tasks',
+    icon: CheckSquare,
+    href: '/dashboard/tasks',
+    module: 'tasks',
   },
   {
     title: 'Workflows',
