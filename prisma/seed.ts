@@ -184,6 +184,8 @@ async function main() {
     { code: "workflows.escalation", module: "workflows", name: "Escalation" },
     { code: "analytics.dashboard-builder", module: "analytics", name: "Dashboard Builder" },
     { code: "inventory.transfer", module: "inventory", name: "Stock Transfer" },
+    { code: "procurement.receiving", module: "procurement", name: "Goods Receiving" },
+    { code: "procurement.evaluation", module: "procurement", name: "Vendor Evaluation" },
   ]
   for (const f of FEATURES) {
     const mod = await prisma.module.findUniqueOrThrow({ where: { code: f.module } })
