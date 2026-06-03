@@ -33,11 +33,12 @@ npm install -g pnpm
 # 2. Install dependencies
 pnpm install
 
-# 3. Create env file
-cp .env.example .env.local
+# 3. Create env file  (.env — read by BOTH Next.js and the Prisma CLI;
+#    do NOT use .env.local, the Prisma CLI ignores it)
+cp .env.example .env
 ```
 
-Edit `.env.local`:
+Edit `.env`:
 ```
 DATABASE_URL=postgresql://...   # from the Neon dashboard
 AUTH_SECRET=...                 # generate next step
