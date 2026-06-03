@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { requireSession } from "@/lib/auth"
 import { requireEntitlement, requireFeature } from "@/lib/entitlement"
 import { requirePermission } from "@/lib/rbac"
+import { fromSession } from "@/lib/scope"
 import { auditLog, diff } from "@/lib/audit"
 import * as repo from "@/lib/entities/hr/repository"
 import {
@@ -33,7 +34,7 @@ export async function getEmployees(): Promise<EmployeeDto[]> {
   const s = await requireSession()
   await requireEntitlement(s.orgId, MODULE)
   await requirePermission(s.userId, "hr.view")
-  return repo.listEmployees({ orgId: s.orgId })
+  return repo.listEmployees({ orgId: s.orgId, sc: fromSession(s) })
 }
 
 export async function getEmployee(id: string): Promise<EmployeeDto> {
@@ -105,7 +106,7 @@ export async function getAttendances(): Promise<AttendanceDto[]> {
   await requireEntitlement(s.orgId, MODULE)
   await requireFeature(s.orgId, F_ATTENDANCE)
   await requirePermission(s.userId, "hr.view")
-  return repo.listAttendances({ orgId: s.orgId })
+  return repo.listAttendances({ orgId: s.orgId, sc: fromSession(s) })
 }
 
 export async function recordAttendance(input: unknown): Promise<AttendanceDto> {
@@ -184,7 +185,7 @@ export async function getLeaveRequests(): Promise<LeaveRequestDto[]> {
   await requireEntitlement(s.orgId, MODULE)
   await requireFeature(s.orgId, F_LEAVE)
   await requirePermission(s.userId, "hr.view")
-  return repo.listLeaveRequests({ orgId: s.orgId })
+  return repo.listLeaveRequests({ orgId: s.orgId, sc: fromSession(s) })
 }
 
 export async function createLeaveRequest(input: unknown): Promise<LeaveRequestDto> {

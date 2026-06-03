@@ -19,11 +19,23 @@ import {
   type SetLeaveBalanceInput,
   type CreatePayslipInput,
 } from "./schema"
+import { type ScopeCtx, branchColumn, viaEmployee } from "@/lib/scope"
 
-type Ctx = { orgId: string; tx?: Prisma.TransactionClient | PrismaClient }
+type Ctx = {
+  orgId: string
+  sc?: ScopeCtx
+  tx?: Prisma.TransactionClient | PrismaClient
+}
 
 function db(ctx: Ctx) {
   return ctx.tx ?? defaultPrisma
+}
+
+function empWhere(ctx: Ctx) {
+  return ctx.sc ? branchColumn(ctx.sc) : {}
+}
+function empRelWhere(ctx: Ctx) {
+  return ctx.sc ? viaEmployee(ctx.sc) : {}
 }
 
 const empStatusOut: Record<string, EmploymentStatus> = {
@@ -124,7 +136,7 @@ function toPayslip(p: PayRow): PayslipDto {
 
 export async function listEmployees(ctx: Ctx): Promise<EmployeeDto[]> {
   const rows = await db(ctx).employee.findMany({
-    where: { organizationId: ctx.orgId, deletedAt: null },
+    where: { organizationId: ctx.orgId, deletedAt: null, ...empWhere(ctx) },
     orderBy: { createdAt: "asc" },
   })
   return rows.map(toEmployee)
@@ -132,7 +144,7 @@ export async function listEmployees(ctx: Ctx): Promise<EmployeeDto[]> {
 
 export async function findEmployee(ctx: Ctx, id: string): Promise<EmployeeDto | null> {
   const row = await db(ctx).employee.findFirst({
-    where: { id, organizationId: ctx.orgId, deletedAt: null },
+    where: { id, organizationId: ctx.orgId, deletedAt: null, ...empWhere(ctx) },
   })
   return row ? toEmployee(row) : null
 }
@@ -198,7 +210,7 @@ export async function softDeleteEmployee(ctx: Ctx, id: string): Promise<void> {
 
 export async function listAttendances(ctx: Ctx): Promise<AttendanceDto[]> {
   const rows = await db(ctx).attendance.findMany({
-    where: { organizationId: ctx.orgId },
+    where: { organizationId: ctx.orgId, ...empRelWhere(ctx) },
     orderBy: { date: "desc" },
     take: 200,
   })
@@ -273,7 +285,7 @@ export async function setLeaveBalance(ctx: Ctx, data: SetLeaveBalanceInput): Pro
 
 export async function listLeaveRequests(ctx: Ctx): Promise<LeaveRequestDto[]> {
   const rows = await db(ctx).leaveRequest.findMany({
-    where: { organizationId: ctx.orgId },
+    where: { organizationId: ctx.orgId, ...empRelWhere(ctx) },
     orderBy: { createdAt: "desc" },
   })
   return rows.map(toLeave)

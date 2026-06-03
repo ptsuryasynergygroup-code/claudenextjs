@@ -34,6 +34,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             passwordHash: true,
             status: true,
             organizationId: true,
+            branchId: true,
+            warehouseId: true,
+            userRoles: {
+              where: { role: { deletedAt: null, status: "ACTIVE" } },
+              select: { role: { select: { scopeLevel: true } } },
+            },
           },
         })
 
@@ -47,11 +53,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           .update({ where: { id: user.id }, data: { lastLoginAt: new Date() } })
           .catch(() => {})
 
+        // Effective scope = broadest among the user's roles (ORG > BRANCH > WAREHOUSE).
+        const levels = user.userRoles.map((ur) => ur.role.scopeLevel)
+        const scope = levels.includes("ORG")
+          ? "org"
+          : levels.includes("BRANCH")
+            ? "branch"
+            : levels.includes("WAREHOUSE")
+              ? "warehouse"
+              : "branch"
+
         return {
           id: user.id,
           name: user.name,
           email: user.email,
           organizationId: user.organizationId,
+          branchId: user.branchId,
+          warehouseId: user.warehouseId,
+          scope,
         }
       },
     }),

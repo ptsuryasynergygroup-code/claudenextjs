@@ -3,6 +3,7 @@ import { requireSession } from "@/lib/auth"
 import { requireEntitlement, requireFeature } from "@/lib/entitlement"
 import { requirePermission } from "@/lib/rbac"
 import { auditLog, diff } from "@/lib/audit"
+import { fromSession } from "@/lib/scope"
 import * as repo from "@/lib/entities/inventory/repository"
 import {
   type ProductDto,
@@ -83,7 +84,7 @@ export async function getWarehouses(): Promise<WarehouseDto[]> {
   const s = await requireSession()
   await requireEntitlement(s.orgId, MODULE)
   await requirePermission(s.userId, "inventory.view")
-  return repo.listWarehouses({ orgId: s.orgId })
+  return repo.listWarehouses({ orgId: s.orgId, sc: fromSession(s) })
 }
 
 export async function createWarehouse(input: unknown): Promise<WarehouseDto> {
@@ -106,14 +107,14 @@ export async function getStocks(): Promise<StockDto[]> {
   const s = await requireSession()
   await requireEntitlement(s.orgId, MODULE)
   await requirePermission(s.userId, "inventory.view")
-  return repo.listStocks({ orgId: s.orgId })
+  return repo.listStocks({ orgId: s.orgId, sc: fromSession(s) })
 }
 
 export async function getMovements(): Promise<StockMovementDto[]> {
   const s = await requireSession()
   await requireEntitlement(s.orgId, MODULE)
   await requirePermission(s.userId, "inventory.view")
-  return repo.listMovements({ orgId: s.orgId })
+  return repo.listMovements({ orgId: s.orgId, sc: fromSession(s) })
 }
 
 export async function recordMovement(input: unknown): Promise<StockMovementDto> {

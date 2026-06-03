@@ -5,14 +5,14 @@
 // evolves. Codes not present in the seeded permission set are ignored.
 
 export const roleFixtures = [
-  { id: "role-001", name: "Super Admin", code: "SUPER_ADMIN", description: "Full system access with all permissions", isSystem: true, status: "ACTIVE" as const, createdAt: new Date("2020-01-15") },
-  { id: "role-002", name: "Administrator", code: "ADMIN", description: "Administrative access to manage users and settings", isSystem: true, status: "ACTIVE" as const, createdAt: new Date("2020-01-15") },
-  { id: "role-003", name: "HR Manager", code: "HR_MANAGER", description: "Full access to HR modules", isSystem: false, status: "ACTIVE" as const, createdAt: new Date("2020-02-01") },
-  { id: "role-004", name: "Finance Manager", code: "FIN_MANAGER", description: "Full access to finance modules", isSystem: false, status: "ACTIVE" as const, createdAt: new Date("2020-02-01") },
-  { id: "role-005", name: "Department Head", code: "DEPT_HEAD", description: "Access to department management and approvals", isSystem: false, status: "ACTIVE" as const, createdAt: new Date("2020-03-01") },
-  { id: "role-006", name: "Employee", code: "EMPLOYEE", description: "Basic access for regular employees", isSystem: true, status: "ACTIVE" as const, createdAt: new Date("2020-01-15") },
-  { id: "role-007", name: "Auditor", code: "AUDITOR", description: "Read-only access for audit purposes", isSystem: false, status: "ACTIVE" as const, createdAt: new Date("2021-06-01") },
-  { id: "role-008", name: "Sales Representative", code: "SALES_REP", description: "Access to sales and customer modules", isSystem: false, status: "ACTIVE" as const, createdAt: new Date("2020-04-01") },
+  { id: "role-001", name: "Super Admin", code: "SUPER_ADMIN", description: "Full system access with all permissions", isSystem: true, scopeLevel: "ORG" as const, status: "ACTIVE" as const, createdAt: new Date("2020-01-15") },
+  { id: "role-002", name: "Administrator", code: "ADMIN", description: "Administrative access to manage users and settings", isSystem: true, scopeLevel: "ORG" as const, status: "ACTIVE" as const, createdAt: new Date("2020-01-15") },
+  { id: "role-003", name: "HR Manager", code: "HR_MANAGER", description: "Full access to HR modules (HQ)", isSystem: false, scopeLevel: "ORG" as const, status: "ACTIVE" as const, createdAt: new Date("2020-02-01") },
+  { id: "role-004", name: "Finance Manager", code: "FIN_MANAGER", description: "Full access to finance modules (HQ)", isSystem: false, scopeLevel: "ORG" as const, status: "ACTIVE" as const, createdAt: new Date("2020-02-01") },
+  { id: "role-005", name: "Department Head", code: "DEPT_HEAD", description: "Branch-scoped: own branch only", isSystem: false, scopeLevel: "BRANCH" as const, status: "ACTIVE" as const, createdAt: new Date("2020-03-01") },
+  { id: "role-006", name: "Employee", code: "EMPLOYEE", description: "Branch-scoped basic access", isSystem: true, scopeLevel: "BRANCH" as const, status: "ACTIVE" as const, createdAt: new Date("2020-01-15") },
+  { id: "role-007", name: "Auditor", code: "AUDITOR", description: "Read-only access for audit purposes (HQ)", isSystem: false, scopeLevel: "ORG" as const, status: "ACTIVE" as const, createdAt: new Date("2021-06-01") },
+  { id: "role-008", name: "Sales Representative", code: "SALES_REP", description: "Branch-scoped sales access", isSystem: false, scopeLevel: "BRANCH" as const, status: "ACTIVE" as const, createdAt: new Date("2020-04-01") },
 ]
 
 // Wildcard "*" means: grant every seeded permission. Otherwise an explicit

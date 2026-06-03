@@ -186,6 +186,7 @@ model User {
   id             String     @id @default(cuid())
   organizationId String     @map("organization_id")
   branchId       String?    @map("branch_id")
+  warehouseId    String?    @map("warehouse_id")
   departmentId   String?    @map("department_id")
   positionId     String?    @map("position_id")
   employeeCode   String?    @map("employee_code")
@@ -275,6 +276,14 @@ model VerificationToken {
 // 3. ROLE & PERMISSION (RBAC)
 // =============================================================================
 
+enum RoleScope {
+  ORG       @map("org")
+  BRANCH    @map("branch")
+  WAREHOUSE @map("warehouse")
+
+  @@map("role_scope")
+}
+
 model Role {
   id             String       @id @default(cuid())
   organizationId String       @map("organization_id")
@@ -282,6 +291,7 @@ model Role {
   code           String
   description    String?
   isSystem       Boolean      @default(false) @map("is_system")
+  scopeLevel     RoleScope    @default(ORG) @map("scope_level")
   status         EntityStatus @default(ACTIVE)
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
@@ -1465,6 +1475,7 @@ model StockTransfer {
 model Warehouse {
   id             String       @id @default(cuid())
   organizationId String       @map("organization_id")
+  branchId       String?      @map("branch_id")
   code           String
   name           String
   location       String?

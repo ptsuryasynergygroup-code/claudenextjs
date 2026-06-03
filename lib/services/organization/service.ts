@@ -7,6 +7,7 @@ import { requireSession } from "@/lib/auth"
 import { requireEntitlement } from "@/lib/entitlement"
 import { requirePermission } from "@/lib/rbac"
 import { auditLog, diff } from "@/lib/audit"
+import { fromSession } from "@/lib/scope"
 import * as repo from "@/lib/entities/organization/repository"
 import {
   type BranchDto,
@@ -42,21 +43,21 @@ export async function getBranches(): Promise<BranchDto[]> {
   const s = await requireSession()
   await requireEntitlement(s.orgId, MODULE)
   await requirePermission(s.userId, "organization.view")
-  return repo.listBranches({ orgId: s.orgId })
+  return repo.listBranches({ orgId: s.orgId, sc: fromSession(s) })
 }
 
 export async function getDepartments(): Promise<DepartmentDto[]> {
   const s = await requireSession()
   await requireEntitlement(s.orgId, MODULE)
   await requirePermission(s.userId, "organization.view")
-  return repo.listDepartments({ orgId: s.orgId })
+  return repo.listDepartments({ orgId: s.orgId, sc: fromSession(s) })
 }
 
 export async function getPositions(): Promise<PositionDto[]> {
   const s = await requireSession()
   await requireEntitlement(s.orgId, MODULE)
   await requirePermission(s.userId, "organization.view")
-  return repo.listPositions({ orgId: s.orgId })
+  return repo.listPositions({ orgId: s.orgId, sc: fromSession(s) })
 }
 
 // -----------------------------------------------------------------------------

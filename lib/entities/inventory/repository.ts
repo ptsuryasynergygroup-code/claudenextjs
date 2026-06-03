@@ -14,11 +14,23 @@ import {
   type CreateStockTransferInput,
 } from "./schema"
 import type { Status } from "@/lib/entities/organization/schema"
+import { type ScopeCtx, warehouseSelf, viaWarehouse } from "@/lib/scope"
 
-type Ctx = { orgId: string; tx?: Prisma.TransactionClient | PrismaClient }
+type Ctx = {
+  orgId: string
+  sc?: ScopeCtx
+  tx?: Prisma.TransactionClient | PrismaClient
+}
 
 function db(ctx: Ctx) {
   return ctx.tx ?? defaultPrisma
+}
+
+function whWhere(ctx: Ctx) {
+  return ctx.sc ? warehouseSelf(ctx.sc) : {}
+}
+function whRelWhere(ctx: Ctx) {
+  return ctx.sc ? viaWarehouse(ctx.sc) : {}
 }
 
 const entOut: Record<string, Status> = { ACTIVE: "active", INACTIVE: "inactive" }
@@ -154,7 +166,7 @@ export async function softDeleteProduct(ctx: Ctx, id: string): Promise<void> {
 
 export async function listWarehouses(ctx: Ctx): Promise<WarehouseDto[]> {
   const rows = await db(ctx).warehouse.findMany({
-    where: { organizationId: ctx.orgId, deletedAt: null },
+    where: { organizationId: ctx.orgId, deletedAt: null, ...whWhere(ctx) },
     orderBy: { createdAt: "asc" },
   })
   return rows.map(toWarehouse)
@@ -178,7 +190,7 @@ export async function createWarehouse(
 
 export async function listStocks(ctx: Ctx): Promise<StockDto[]> {
   const rows = await db(ctx).stock.findMany({
-    where: { organizationId: ctx.orgId },
+    where: { organizationId: ctx.orgId, ...whRelWhere(ctx) },
     orderBy: { updatedAt: "desc" },
   })
   return rows.map(toStock)
@@ -186,7 +198,7 @@ export async function listStocks(ctx: Ctx): Promise<StockDto[]> {
 
 export async function listMovements(ctx: Ctx): Promise<StockMovementDto[]> {
   const rows = await db(ctx).stockMovement.findMany({
-    where: { organizationId: ctx.orgId },
+    where: { organizationId: ctx.orgId, ...whRelWhere(ctx) },
     orderBy: { createdAt: "desc" },
     take: 200,
   })

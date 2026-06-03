@@ -19,11 +19,24 @@ import {
   type Status,
   type OrgStatus,
 } from "./schema"
+import { type ScopeCtx, branchSelf } from "@/lib/scope"
 
-type Ctx = { orgId: string; tx?: Prisma.TransactionClient | PrismaClient }
+type Ctx = {
+  orgId: string
+  sc?: ScopeCtx
+  tx?: Prisma.TransactionClient | PrismaClient
+}
 
 function db(ctx: Ctx) {
   return ctx.tx ?? defaultPrisma
+}
+
+function branchScopeWhere(ctx: Ctx) {
+  return ctx.sc ? branchSelf(ctx.sc) : {}
+}
+function deptScopeWhere(ctx: Ctx) {
+  if (!ctx.sc || ctx.sc.scope === "org") return {}
+  return { branchId: ctx.sc.branchId ?? "__no_access__" }
 }
 
 // -----------------------------------------------------------------------------
@@ -146,7 +159,7 @@ export async function updateOrganization(
 
 export async function listBranches(ctx: Ctx): Promise<BranchDto[]> {
   const rows = await db(ctx).branch.findMany({
-    where: { organizationId: ctx.orgId, deletedAt: null },
+    where: { organizationId: ctx.orgId, deletedAt: null, ...branchScopeWhere(ctx) },
     orderBy: { createdAt: "asc" },
   })
   return rows.map(toBranchDto)
@@ -154,7 +167,7 @@ export async function listBranches(ctx: Ctx): Promise<BranchDto[]> {
 
 export async function findBranch(ctx: Ctx, id: string): Promise<BranchDto | null> {
   const row = await db(ctx).branch.findFirst({
-    where: { id, organizationId: ctx.orgId, deletedAt: null },
+    where: { id, organizationId: ctx.orgId, deletedAt: null, ...branchScopeWhere(ctx) },
   })
   return row ? toBranchDto(row) : null
 }
@@ -203,7 +216,7 @@ export async function softDeleteBranch(ctx: Ctx, id: string): Promise<BranchDto>
 
 export async function listDepartments(ctx: Ctx): Promise<DepartmentDto[]> {
   const rows = await db(ctx).department.findMany({
-    where: { organizationId: ctx.orgId, deletedAt: null },
+    where: { organizationId: ctx.orgId, deletedAt: null, ...deptScopeWhere(ctx) },
     orderBy: { createdAt: "asc" },
   })
   return rows.map(toDeptDto)
@@ -211,7 +224,7 @@ export async function listDepartments(ctx: Ctx): Promise<DepartmentDto[]> {
 
 export async function findDepartment(ctx: Ctx, id: string): Promise<DepartmentDto | null> {
   const row = await db(ctx).department.findFirst({
-    where: { id, organizationId: ctx.orgId, deletedAt: null },
+    where: { id, organizationId: ctx.orgId, deletedAt: null, ...deptScopeWhere(ctx) },
   })
   return row ? toDeptDto(row) : null
 }
@@ -267,7 +280,7 @@ export async function listPositions(ctx: Ctx): Promise<PositionDto[]> {
   const rows = await db(ctx).position.findMany({
     where: {
       deletedAt: null,
-      department: { organizationId: ctx.orgId, deletedAt: null },
+      department: { organizationId: ctx.orgId, deletedAt: null, ...deptScopeWhere(ctx) },
     },
     orderBy: [{ level: "asc" }, { createdAt: "asc" }],
   })
@@ -279,7 +292,7 @@ export async function findPosition(ctx: Ctx, id: string): Promise<PositionDto | 
     where: {
       id,
       deletedAt: null,
-      department: { organizationId: ctx.orgId },
+      department: { organizationId: ctx.orgId, ...deptScopeWhere(ctx) },
     },
   })
   return row ? toPosDto(row) : null

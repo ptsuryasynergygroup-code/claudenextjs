@@ -207,7 +207,7 @@ async function main() {
   for (const r of roleFixtures) {
     await prisma.role.upsert({
       where: { id: r.id },
-      update: {},
+      update: { scopeLevel: r.scopeLevel },
       create: { ...r, organizationId: org.id },
     })
 
