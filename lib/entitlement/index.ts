@@ -61,3 +61,21 @@ export async function hasFeature(orgId: string, featureCode: string): Promise<bo
   })
   return row !== null
 }
+
+/** Throws ENTITLEMENT_REQUIRED if a sub-feature is not enabled for the org. */
+export async function requireFeature(orgId: string, featureCode: string): Promise<void> {
+  const ok = await hasFeature(orgId, featureCode)
+  if (!ok) entitlementRequired(featureCode)
+}
+
+/** Enabled feature codes for this deployment (operator source, else DB). */
+export async function listEnabledFeatures(orgId: string): Promise<string[]> {
+  const op = await fetchOperatorEntitlements()
+  if (op) return op.features
+
+  const rows = await prisma.organizationFeature.findMany({
+    where: { organizationId: orgId, enabled: true },
+    select: { feature: { select: { code: true } } },
+  })
+  return rows.map((r) => r.feature.code)
+}

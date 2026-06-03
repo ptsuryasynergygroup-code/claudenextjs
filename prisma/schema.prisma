@@ -55,6 +55,9 @@ model Organization {
   employees             Employee[]
   attendances           Attendance[]
   leaveRequests         LeaveRequest[]
+  leaveTypes            LeaveType[]
+  leaveBalances         LeaveBalance[]
+  payslips              Payslip[]
   accounts              LedgerAccount[]
   transactions          Transaction[]
   invoices              Invoice[]
@@ -762,10 +765,32 @@ model Employee {
   organizationId   String           @map("organization_id")
   userId           String?          @unique @map("user_id")
   employeeCode     String           @map("employee_code")
+  fullName         String           @default("") @map("full_name")
+  /// @pii
+  nik              String?
+  dateOfBirth      DateTime?        @map("date_of_birth")
+  gender           String?
+  maritalStatus    String?          @map("marital_status")
+  religion         String?
+  /// @pii
+  address          String?
+  /// @pii
+  phone            String?
+  /// @pii
+  personalEmail    String?          @map("personal_email")
+  branchId         String?          @map("branch_id")
+  departmentId     String?          @map("department_id")
+  positionId       String?          @map("position_id")
   joinDate         DateTime         @map("join_date")
+  endDate          DateTime?        @map("end_date")
   employmentStatus EmploymentStatus @default(PERMANENT) @map("employment_status")
   /// @pii
   basicSalary      Int?             @map("basic_salary")
+  bankName         String?          @map("bank_name")
+  /// @pii
+  bankAccount      String?          @map("bank_account")
+  /// @pii
+  npwp             String?
   createdAt        DateTime         @default(now()) @map("created_at")
   updatedAt        DateTime         @updatedAt @map("updated_at")
   deletedAt        DateTime?        @map("deleted_at")
@@ -773,6 +798,8 @@ model Employee {
   organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   attendances   Attendance[]
   leaveRequests LeaveRequest[]
+  leaveBalances LeaveBalance[]
+  payslips      Payslip[]
 
   @@unique([organizationId, employeeCode])
   @@index([organizationId])
@@ -812,6 +839,7 @@ model LeaveRequest {
   organizationId String      @map("organization_id")
   employeeId     String      @map("employee_id")
   leaveType      String      @map("leave_type")
+  leaveTypeId    String?     @map("leave_type_id")
   startDate      DateTime    @map("start_date")
   endDate        DateTime    @map("end_date")
   reason         String?
@@ -825,6 +853,89 @@ model LeaveRequest {
   @@index([organizationId])
   @@index([organizationId, employeeId])
   @@map("leave_requests")
+}
+
+model LeaveType {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  name           String
+  daysPerYear    Int       @default(12) @map("days_per_year")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  balances     LeaveBalance[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("leave_types")
+}
+
+model LeaveBalance {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  employeeId     String @map("employee_id")
+  leaveTypeId    String @map("leave_type_id")
+  year           Int
+  entitled       Int    @default(0)
+  used           Int    @default(0)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee     Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  leaveType    LeaveType    @relation(fields: [leaveTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, leaveTypeId, year])
+  @@index([organizationId])
+  @@map("leave_balances")
+}
+
+enum PayslipStatus {
+  DRAFT     @map("draft")
+  FINALIZED @map("finalized")
+
+  @@map("payslip_status")
+}
+
+enum PayslipComponentType {
+  EARNING   @map("earning")
+  DEDUCTION @map("deduction")
+
+  @@map("payslip_component_type")
+}
+
+model Payslip {
+  id              String        @id @default(cuid())
+  organizationId  String        @map("organization_id")
+  employeeId      String        @map("employee_id")
+  period          String        // YYYY-MM
+  grossPay        Int           @default(0) @map("gross_pay")
+  totalDeductions Int           @default(0) @map("total_deductions")
+  netPay          Int           @default(0) @map("net_pay")
+  status          PayslipStatus @default(DRAFT)
+  createdBy       String        @map("created_by")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  organization Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee     Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  components   PayslipComponent[]
+
+  @@unique([employeeId, period])
+  @@index([organizationId])
+  @@map("payslips")
+}
+
+model PayslipComponent {
+  id        String               @id @default(cuid())
+  payslipId String               @map("payslip_id")
+  type      PayslipComponentType
+  name      String
+  amount    Int                  @default(0)
+
+  payslip Payslip @relation(fields: [payslipId], references: [id], onDelete: Cascade)
+
+  @@index([payslipId])
+  @@map("payslip_components")
 }
 
 enum AccountType {

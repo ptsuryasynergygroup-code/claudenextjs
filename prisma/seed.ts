@@ -169,6 +169,35 @@ async function main() {
   }
 
   // ---------------------------------------------------------------------------
+  // 4b. Features + org-feature grants (DB fallback when no operator configured)
+  // ---------------------------------------------------------------------------
+  const FEATURES = [
+    { code: "hr.attendance", module: "hr", name: "Attendance" },
+    { code: "hr.leave", module: "hr", name: "Leave Management" },
+    { code: "hr.payroll", module: "hr", name: "Payroll" },
+    { code: "hr.bpjs", module: "hr", name: "BPJS" },
+    { code: "documents.ocr", module: "documents", name: "OCR" },
+    { code: "documents.digital-signature", module: "documents", name: "Digital Signature" },
+    { code: "finance.tax", module: "finance", name: "Tax" },
+    { code: "finance.bank-reconciliation", module: "finance", name: "Bank Reconciliation" },
+    { code: "workflows.escalation", module: "workflows", name: "Escalation" },
+    { code: "analytics.dashboard-builder", module: "analytics", name: "Dashboard Builder" },
+  ]
+  for (const f of FEATURES) {
+    const mod = await prisma.module.findUniqueOrThrow({ where: { code: f.module } })
+    const feature = await prisma.feature.upsert({
+      where: { code: f.code },
+      update: { name: f.name, moduleId: mod.id },
+      create: { code: f.code, name: f.name, moduleId: mod.id },
+    })
+    await prisma.organizationFeature.upsert({
+      where: { organizationId_featureId: { organizationId: org.id, featureId: feature.id } },
+      update: { enabled: true },
+      create: { organizationId: org.id, featureId: feature.id, enabled: true, source: "package" },
+    })
+  }
+
+  // ---------------------------------------------------------------------------
   // 5. Roles + role-permissions
   // ---------------------------------------------------------------------------
   for (const r of roleFixtures) {
