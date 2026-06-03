@@ -7,6 +7,8 @@ Bootstrapped on Vercel v0, continued in Claude Code.
 1. `EOS_PRD_FOR_CLAUDE.md` — **source of truth**: invariants, layers, anti-patterns, per-module specs
 2. `EOS_Foundation_ERD.txt` — entity relationships
 3. `EOS_Core_Business_Entities_Spec.txt` — domain taxonomy & build phases
+4. `EOS_COORDINATION_PRD.md` — planned coordination/people layer (chat + push, accountability chart, jobdesk/work-time, realtime performance, teams). DRAFT — owner reviewing; build after sign-off.
+5. `RUNBOOK.md` — how to run, modules, status
 
 # Rules for every session
 1. Read files before writing. No assumptions.
