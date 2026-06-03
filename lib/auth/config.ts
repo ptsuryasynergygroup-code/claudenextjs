@@ -1,30 +1,10 @@
-// Auth.js v5 (next-auth@beta) configuration.
-// Uses Prisma adapter + credentials provider with bcrypt password hash.
-// Session token is JWT (default). Adapter is needed for Account/User linking.
-
-import NextAuth, { type DefaultSession } from "next-auth"
+import NextAuth from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import Credentials from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 import { prisma } from "@/lib/prisma"
-
-// Extend session payload with EOS context. Anything we read from session
-// in guards/services lives here.
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string
-      organizationId: string
-      name: string
-      email: string
-    } & DefaultSession["user"]
-  }
-
-  interface User {
-    organizationId: string
-  }
-}
+import { authConfig } from "@/lib/auth/base"
 
 const CredentialsSchema = z.object({
   email: z.string().email(),
@@ -32,11 +12,8 @@ const CredentialsSchema = z.object({
 })
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/signin",
-  },
   providers: [
     Credentials({
       name: "credentials",
@@ -48,7 +25,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const parsed = CredentialsSchema.safeParse(raw)
         if (!parsed.success) return null
 
-        const user = await prisma.user.findUnique({
+        const user = await prisma.user.findFirst({
           where: { email: parsed.data.email, deletedAt: null },
           select: {
             id: true,
@@ -66,9 +43,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const ok = await bcrypt.compare(parsed.data.password, user.passwordHash)
         if (!ok) return null
 
-        // Async-but-fire-and-forget login timestamp. We don't await to keep
-        // sign-in fast; failure to update is non-fatal.
-        prisma.user
+        await prisma.user
           .update({ where: { id: user.id }, data: { lastLoginAt: new Date() } })
           .catch(() => {})
 
@@ -81,20 +56,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
-        token.organizationId = (user as { organizationId: string }).organizationId
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (token.id) session.user.id = token.id as string
-      if (token.organizationId) {
-        session.user.organizationId = token.organizationId as string
-      }
-      return session
-    },
-  },
 })
