@@ -62,6 +62,8 @@ model Organization {
   transactions          Transaction[]
   invoices              Invoice[]
   payments              Payment[]
+  journalEntries        JournalEntry[]
+  budgets               Budget[]
   vendors               Vendor[]
   purchaseRequests      PurchaseRequest[]
   purchaseOrders        PurchaseOrder[]
@@ -963,6 +965,8 @@ model LedgerAccount {
   parent       LedgerAccount?  @relation("LedgerAccountTree", fields: [parentId], references: [id], onDelete: Restrict)
   children     LedgerAccount[] @relation("LedgerAccountTree")
   transactions Transaction[]
+  journalLines JournalLine[]
+  budgets      Budget[]
 
   @@unique([organizationId, code])
   @@index([organizationId])
@@ -1020,13 +1024,87 @@ model Invoice {
   updatedAt      DateTime      @updatedAt @map("updated_at")
   deletedAt      DateTime?     @map("deleted_at")
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   payments     Payment[]
+  items        InvoiceItem[]
 
   @@unique([organizationId, number])
   @@index([organizationId])
   @@index([organizationId, deletedAt])
   @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String @id @default(cuid())
+  invoiceId   String @map("invoice_id")
+  description String
+  quantity    Int    @default(1)
+  unitPrice   Int    @default(0) @map("unit_price")
+  amount      Int    @default(0)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
+
+enum JournalStatus {
+  DRAFT  @map("draft")
+  POSTED @map("posted")
+
+  @@map("journal_status")
+}
+
+model JournalEntry {
+  id             String        @id @default(cuid())
+  organizationId String        @map("organization_id")
+  entryDate      DateTime      @map("entry_date")
+  reference      String?
+  memo           String?
+  status         JournalStatus @default(DRAFT)
+  createdBy      String        @map("created_by")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  lines        JournalLine[]
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@map("journal_entries")
+}
+
+model JournalLine {
+  id             String  @id @default(cuid())
+  journalEntryId String  @map("journal_entry_id")
+  accountId      String  @map("account_id")
+  debit          Int     @default(0)
+  credit         Int     @default(0)
+  description    String?
+
+  entry   JournalEntry  @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  account LedgerAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([journalEntryId])
+  @@index([accountId])
+  @@map("journal_lines")
+}
+
+model Budget {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  accountId      String   @map("account_id")
+  period         String   // YYYY or YYYY-MM
+  amount         Int      @default(0)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  account      LedgerAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, accountId, period])
+  @@index([organizationId])
+  @@map("budgets")
 }
 
 model Payment {

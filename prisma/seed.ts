@@ -180,6 +180,7 @@ async function main() {
     { code: "documents.digital-signature", module: "documents", name: "Digital Signature" },
     { code: "finance.tax", module: "finance", name: "Tax" },
     { code: "finance.bank-reconciliation", module: "finance", name: "Bank Reconciliation" },
+    { code: "finance.budget", module: "finance", name: "Budget" },
     { code: "workflows.escalation", module: "workflows", name: "Escalation" },
     { code: "analytics.dashboard-builder", module: "analytics", name: "Dashboard Builder" },
   ]

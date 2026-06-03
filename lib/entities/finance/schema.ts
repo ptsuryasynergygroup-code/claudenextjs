@@ -102,3 +102,78 @@ export const CreatePaymentSchema = z.object({
   reference: z.string().nullable().optional(),
 })
 export type CreatePaymentInput = z.infer<typeof CreatePaymentSchema>
+
+// -----------------------------------------------------------------------------
+// Journal entries (double-entry)
+// -----------------------------------------------------------------------------
+
+export const JournalStatusSchema = z.enum(["draft", "posted"])
+export type JournalStatus = z.infer<typeof JournalStatusSchema>
+
+export const JournalLineSchema = z.object({
+  id: z.string(),
+  journalEntryId: z.string(),
+  accountId: z.string(),
+  debit: z.number().int(),
+  credit: z.number().int(),
+  description: z.string().nullable(),
+})
+export type JournalLineDto = z.infer<typeof JournalLineSchema>
+
+export const JournalEntrySchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  entryDate: z.date(),
+  reference: z.string().nullable(),
+  memo: z.string().nullable(),
+  status: JournalStatusSchema,
+  createdAt: z.date(),
+  lines: z.array(JournalLineSchema),
+})
+export type JournalEntryDto = z.infer<typeof JournalEntrySchema>
+
+export const CreateJournalEntrySchema = z
+  .object({
+    entryDate: z.coerce.date(),
+    reference: z.string().nullable().optional(),
+    memo: z.string().nullable().optional(),
+    lines: z
+      .array(
+        z.object({
+          accountId: z.string().min(1),
+          debit: z.number().int().min(0).default(0),
+          credit: z.number().int().min(0).default(0),
+          description: z.string().nullable().optional(),
+        }),
+      )
+      .min(2),
+  })
+  .refine(
+    (v) => {
+      const d = v.lines.reduce((s, l) => s + l.debit, 0)
+      const c = v.lines.reduce((s, l) => s + l.credit, 0)
+      return d === c && d > 0
+    },
+    { message: "Total debit must equal total credit and be greater than zero" },
+  )
+export type CreateJournalEntryInput = z.infer<typeof CreateJournalEntrySchema>
+
+// -----------------------------------------------------------------------------
+// Budget (feature: finance.budget)
+// -----------------------------------------------------------------------------
+
+export const BudgetSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  accountId: z.string(),
+  period: z.string(),
+  amount: z.number().int(),
+})
+export type BudgetDto = z.infer<typeof BudgetSchema>
+
+export const SetBudgetSchema = z.object({
+  accountId: z.string().min(1),
+  period: z.string().regex(/^\d{4}(-\d{2})?$/, "Use YYYY or YYYY-MM"),
+  amount: z.number().int().min(0),
+})
+export type SetBudgetInput = z.infer<typeof SetBudgetSchema>

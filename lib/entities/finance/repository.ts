@@ -14,6 +14,11 @@ import {
   type CreateInvoiceInput,
   type UpdateInvoiceInput,
   type CreatePaymentInput,
+  type JournalEntryDto,
+  type JournalStatus,
+  type BudgetDto,
+  type CreateJournalEntryInput,
+  type SetBudgetInput,
 } from "./schema"
 
 type Ctx = { orgId: string; tx?: Prisma.TransactionClient | PrismaClient }
@@ -295,4 +300,143 @@ export async function createPayment(
     },
   })
   return toPayment(row)
+}
+
+// Journal entries -------------------------------------------------------------
+
+const journalStatusOut: Record<string, JournalStatus> = { DRAFT: "draft", POSTED: "posted" }
+
+const journalInclude = { lines: true }
+type JournalRow = Prisma.JournalEntryGetPayload<{ include: typeof journalInclude }>
+
+function toJournal(j: JournalRow): JournalEntryDto {
+  return {
+    id: j.id,
+    organizationId: j.organizationId,
+    entryDate: j.entryDate,
+    reference: j.reference,
+    memo: j.memo,
+    status: journalStatusOut[j.status] ?? "draft",
+    createdAt: j.createdAt,
+    lines: j.lines.map((l) => ({
+      id: l.id,
+      journalEntryId: l.journalEntryId,
+      accountId: l.accountId,
+      debit: l.debit,
+      credit: l.credit,
+      description: l.description,
+    })),
+  }
+}
+
+export async function listJournalEntries(ctx: Ctx): Promise<JournalEntryDto[]> {
+  const rows = await db(ctx).journalEntry.findMany({
+    where: { organizationId: ctx.orgId },
+    orderBy: { entryDate: "desc" },
+    include: journalInclude,
+    take: 200,
+  })
+  return rows.map(toJournal)
+}
+
+export async function findJournalEntry(ctx: Ctx, id: string): Promise<JournalEntryDto | null> {
+  const row = await db(ctx).journalEntry.findFirst({
+    where: { id, organizationId: ctx.orgId },
+    include: journalInclude,
+  })
+  return row ? toJournal(row) : null
+}
+
+export async function createJournalEntry(
+  ctx: Ctx,
+  data: CreateJournalEntryInput,
+  createdBy: string,
+): Promise<JournalEntryDto> {
+  const accountIds = Array.from(new Set(data.lines.map((l) => l.accountId)))
+  const count = await db(ctx).ledgerAccount.count({
+    where: { id: { in: accountIds }, organizationId: ctx.orgId, deletedAt: null },
+  })
+  if (count !== accountIds.length) throw new Error("One or more accounts not found in this organization")
+
+  const row = await db(ctx).journalEntry.create({
+    data: {
+      organizationId: ctx.orgId,
+      entryDate: data.entryDate,
+      reference: data.reference ?? null,
+      memo: data.memo ?? null,
+      status: "DRAFT",
+      createdBy,
+      lines: {
+        create: data.lines.map((l) => ({
+          accountId: l.accountId,
+          debit: l.debit,
+          credit: l.credit,
+          description: l.description ?? null,
+        })),
+      },
+    },
+    include: journalInclude,
+  })
+  return toJournal(row)
+}
+
+export async function postJournalEntry(ctx: Ctx, id: string): Promise<JournalEntryDto> {
+  const existing = await db(ctx).journalEntry.findFirst({
+    where: { id, organizationId: ctx.orgId },
+    select: { id: true },
+  })
+  if (!existing) throw new Error("Journal entry not found")
+  const row = await db(ctx).journalEntry.update({
+    where: { id, organizationId: ctx.orgId },
+    data: { status: "POSTED" },
+    include: journalInclude,
+  })
+  return toJournal(row)
+}
+
+// Budgets ---------------------------------------------------------------------
+
+type BudgetRow = Prisma.BudgetGetPayload<object>
+
+function toBudget(b: BudgetRow): BudgetDto {
+  return {
+    id: b.id,
+    organizationId: b.organizationId,
+    accountId: b.accountId,
+    period: b.period,
+    amount: b.amount,
+  }
+}
+
+export async function listBudgets(ctx: Ctx): Promise<BudgetDto[]> {
+  const rows = await db(ctx).budget.findMany({
+    where: { organizationId: ctx.orgId },
+    orderBy: { period: "desc" },
+  })
+  return rows.map(toBudget)
+}
+
+export async function setBudget(ctx: Ctx, data: SetBudgetInput): Promise<BudgetDto> {
+  const acct = await db(ctx).ledgerAccount.findFirst({
+    where: { id: data.accountId, organizationId: ctx.orgId, deletedAt: null },
+    select: { id: true },
+  })
+  if (!acct) throw new Error("Account not found in this organization")
+  const row = await db(ctx).budget.upsert({
+    where: {
+      organizationId_accountId_period: {
+        organizationId: ctx.orgId,
+        accountId: data.accountId,
+        period: data.period,
+      },
+    },
+    update: { amount: data.amount },
+    create: {
+      organizationId: ctx.orgId,
+      accountId: data.accountId,
+      period: data.period,
+      amount: data.amount,
+    },
+  })
+  return toBudget(row)
 }
