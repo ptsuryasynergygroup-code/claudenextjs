@@ -53,6 +53,7 @@ model Organization {
   projects              Project[]
   tasks                 Task[]
   employees             Employee[]
+  employeeDocuments     EmployeeDocument[]
   attendances           Attendance[]
   leaveRequests         LeaveRequest[]
   leaveTypes            LeaveType[]
@@ -799,16 +800,40 @@ model Employee {
   updatedAt        DateTime         @updatedAt @map("updated_at")
   deletedAt        DateTime?        @map("deleted_at")
 
-  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  organization  Organization       @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   attendances   Attendance[]
   leaveRequests LeaveRequest[]
   leaveBalances LeaveBalance[]
   payslips      Payslip[]
+  documents     EmployeeDocument[]
 
   @@unique([organizationId, employeeCode])
   @@index([organizationId])
   @@index([organizationId, deletedAt])
   @@map("employees")
+}
+
+model EmployeeDocument {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  employeeId     String   @map("employee_id")
+  docType        String   @map("doc_type")
+  title          String?
+  /// @pii
+  fileName       String   @map("file_name")
+  /// @pii
+  filePath       String   @map("file_path")
+  fileSize       Int      @default(0) @map("file_size")
+  mimeType       String   @map("mime_type")
+  uploadedBy     String   @map("uploaded_by")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  employee     Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([organizationId, employeeId])
+  @@map("employee_documents")
 }
 
 model Attendance {

@@ -13,6 +13,10 @@ import {
   createPayslip,
   finalizePayslip,
 } from "@/lib/services/hr/service"
+import {
+  uploadEmployeeDocument,
+  deleteEmployeeDocument,
+} from "@/lib/services/hr/document-service"
 
 export type EmployeeFormValues = {
   employeeCode: string
@@ -115,4 +119,27 @@ export async function createPayslipAction(input: {
 export async function finalizePayslipAction(id: string) {
   await finalizePayslip(id)
   revalidatePath("/dashboard/hr")
+}
+
+export async function uploadEmployeeDocumentAction(formData: FormData) {
+  const file = formData.get("file")
+  if (!(file instanceof File)) throw new Error("No file provided")
+  const employeeId = String(formData.get("employeeId") ?? "")
+  const docType = String(formData.get("docType") ?? "")
+  const title = String(formData.get("title") ?? "")
+  const bytes = Buffer.from(await file.arrayBuffer())
+  await uploadEmployeeDocument({
+    employeeId,
+    docType,
+    title: title || null,
+    fileName: file.name,
+    mimeType: file.type || "application/octet-stream",
+    bytes,
+  })
+  revalidatePath(`/dashboard/hr/employees/${employeeId}`)
+}
+
+export async function deleteEmployeeDocumentAction(id: string, employeeId: string) {
+  await deleteEmployeeDocument(id)
+  revalidatePath(`/dashboard/hr/employees/${employeeId}`)
 }
