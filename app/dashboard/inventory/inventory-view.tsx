@@ -36,6 +36,7 @@ import {
   createProductAction,
   createWarehouseAction,
   recordMovementAction,
+  createTransferAction,
 } from './_actions'
 import type {
   ProductDto,
@@ -43,6 +44,7 @@ import type {
   StockDto,
   StockMovementDto,
   StockMovementType,
+  StockTransferDto,
 } from '@/lib/entities/inventory/schema'
 
 export function InventoryView({
@@ -50,22 +52,38 @@ export function InventoryView({
   warehouses,
   stocks,
   movements,
+  transfers,
+  features,
   canCreate,
 }: {
   products: ProductDto[]
   warehouses: WarehouseDto[]
   stocks: StockDto[]
   movements: StockMovementDto[]
+  transfers: StockTransferDto[]
+  features: { transfer: boolean }
   canCreate: boolean
 }) {
   const [isPending, startTransition] = useTransition()
   const productName = new Map(products.map((p) => [p.id, p.name]))
+  const productMin = new Map(products.map((p) => [p.id, p.minStock]))
   const warehouseName = new Map(warehouses.map((w) => [w.id, w.name]))
 
   const [pOpen, setPOpen] = useState(false)
   const [sku, setSku] = useState('')
   const [pName, setPName] = useState('')
   const [unit, setUnit] = useState('pcs')
+  const [pCategory, setPCategory] = useState('')
+  const [pBarcode, setPBarcode] = useState('')
+  const [pCost, setPCost] = useState('')
+  const [pSell, setPSell] = useState('')
+  const [pMin, setPMin] = useState('')
+
+  const [tOpen, setTOpen] = useState(false)
+  const [tProduct, setTProduct] = useState('')
+  const [tFrom, setTFrom] = useState('')
+  const [tTo, setTTo] = useState('')
+  const [tQty, setTQty] = useState('')
 
   const [wOpen, setWOpen] = useState(false)
   const [wCode, setWCode] = useState('')
@@ -101,6 +119,7 @@ export function InventoryView({
           <TabsTrigger value="warehouses">Warehouses</TabsTrigger>
           <TabsTrigger value="stock">Stock</TabsTrigger>
           <TabsTrigger value="movements">Movements</TabsTrigger>
+          {features.transfer && <TabsTrigger value="transfers">Transfers</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="products" className="space-y-4">
@@ -111,13 +130,24 @@ export function InventoryView({
                 <DialogContent>
                   <DialogHeader><DialogTitle>New Product</DialogTitle></DialogHeader>
                   <div className="space-y-4">
-                    <div className="space-y-2"><Label htmlFor="sku">SKU</Label><Input id="sku" value={sku} onChange={(e) => setSku(e.target.value)} /></div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2"><Label htmlFor="sku">SKU</Label><Input id="sku" value={sku} onChange={(e) => setSku(e.target.value)} /></div>
+                      <div className="space-y-2"><Label htmlFor="un">Unit</Label><Input id="un" value={unit} onChange={(e) => setUnit(e.target.value)} /></div>
+                    </div>
                     <div className="space-y-2"><Label htmlFor="pn">Name</Label><Input id="pn" value={pName} onChange={(e) => setPName(e.target.value)} /></div>
-                    <div className="space-y-2"><Label htmlFor="un">Unit</Label><Input id="un" value={unit} onChange={(e) => setUnit(e.target.value)} /></div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2"><Label htmlFor="cat">Category</Label><Input id="cat" value={pCategory} onChange={(e) => setPCategory(e.target.value)} /></div>
+                      <div className="space-y-2"><Label htmlFor="bc">Barcode</Label><Input id="bc" value={pBarcode} onChange={(e) => setPBarcode(e.target.value)} /></div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="space-y-2"><Label htmlFor="cost">Cost</Label><Input id="cost" type="number" value={pCost} onChange={(e) => setPCost(e.target.value)} /></div>
+                      <div className="space-y-2"><Label htmlFor="sell">Sell</Label><Input id="sell" type="number" value={pSell} onChange={(e) => setPSell(e.target.value)} /></div>
+                      <div className="space-y-2"><Label htmlFor="min">Min Stock</Label><Input id="min" type="number" value={pMin} onChange={(e) => setPMin(e.target.value)} /></div>
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button disabled={isPending || !sku || !pName}
-                      onClick={() => run(async () => { await createProductAction({ sku, name: pName, unit }); setPOpen(false); setSku(''); setPName(''); setUnit('pcs') }, 'Product created')}>Create</Button>
+                      onClick={() => run(async () => { await createProductAction({ sku, name: pName, unit, category: pCategory || null, barcode: pBarcode || null, costPrice: Number(pCost) || 0, sellPrice: Number(pSell) || 0, minStock: Number(pMin) || 0 }); setPOpen(false); setSku(''); setPName(''); setUnit('pcs'); setPCategory(''); setPBarcode(''); setPCost(''); setPSell(''); setPMin('') }, 'Product created')}>Create</Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -127,17 +157,19 @@ export function InventoryView({
             <CardHeader><CardTitle>Products</CardTitle><CardDescription>{products.length} total</CardDescription></CardHeader>
             <CardContent>
               <Table>
-                <TableHeader><TableRow><TableHead>SKU</TableHead><TableHead>Name</TableHead><TableHead>Unit</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>SKU</TableHead><TableHead>Name</TableHead><TableHead>Category</TableHead><TableHead>Sell Price</TableHead><TableHead>Min</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
                 <TableBody>
                   {products.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell className="font-mono text-sm">{p.sku}</TableCell>
                       <TableCell className="font-medium">{p.name}</TableCell>
-                      <TableCell className="text-sm">{p.unit}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{p.category ?? '-'}</TableCell>
+                      <TableCell>{new Intl.NumberFormat('id-ID').format(p.sellPrice)}</TableCell>
+                      <TableCell className="text-sm">{p.minStock}</TableCell>
                       <TableCell><Badge variant="secondary">{p.status}</Badge></TableCell>
                     </TableRow>
                   ))}
-                  {products.length === 0 && (<TableRow><TableCell colSpan={4} className="text-center text-sm text-muted-foreground py-8">No products yet.</TableCell></TableRow>)}
+                  {products.length === 0 && (<TableRow><TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">No products yet.</TableCell></TableRow>)}
                 </TableBody>
               </Table>
             </CardContent>
@@ -188,16 +220,21 @@ export function InventoryView({
             <CardHeader><CardTitle>Stock Levels</CardTitle><CardDescription>{stocks.length} entries</CardDescription></CardHeader>
             <CardContent>
               <Table>
-                <TableHeader><TableRow><TableHead>Product</TableHead><TableHead>Warehouse</TableHead><TableHead>Quantity</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Product</TableHead><TableHead>Warehouse</TableHead><TableHead>Quantity</TableHead><TableHead></TableHead></TableRow></TableHeader>
                 <TableBody>
-                  {stocks.map((st) => (
-                    <TableRow key={st.id}>
-                      <TableCell className="text-sm">{productName.get(st.productId) ?? '-'}</TableCell>
-                      <TableCell className="text-sm">{warehouseName.get(st.warehouseId) ?? '-'}</TableCell>
-                      <TableCell className="font-medium">{st.quantity}</TableCell>
-                    </TableRow>
-                  ))}
-                  {stocks.length === 0 && (<TableRow><TableCell colSpan={3} className="text-center text-sm text-muted-foreground py-8">No stock yet.</TableCell></TableRow>)}
+                  {stocks.map((st) => {
+                    const min = productMin.get(st.productId) ?? 0
+                    const low = min > 0 && st.quantity <= min
+                    return (
+                      <TableRow key={st.id}>
+                        <TableCell className="text-sm">{productName.get(st.productId) ?? '-'}</TableCell>
+                        <TableCell className="text-sm">{warehouseName.get(st.warehouseId) ?? '-'}</TableCell>
+                        <TableCell className="font-medium">{st.quantity}</TableCell>
+                        <TableCell>{low && <Badge variant="destructive">Low stock</Badge>}</TableCell>
+                      </TableRow>
+                    )
+                  })}
+                  {stocks.length === 0 && (<TableRow><TableCell colSpan={4} className="text-center text-sm text-muted-foreground py-8">No stock yet.</TableCell></TableRow>)}
                 </TableBody>
               </Table>
             </CardContent>
@@ -270,6 +307,73 @@ export function InventoryView({
             </CardContent>
           </Card>
         </TabsContent>
+
+        {features.transfer && (
+          <TabsContent value="transfers" className="space-y-4">
+            {canCreate && products.length > 0 && warehouses.length >= 2 && (
+              <div className="flex justify-end">
+                <Dialog open={tOpen} onOpenChange={setTOpen}>
+                  <DialogTrigger asChild><Button><Plus className="mr-2 size-4" />New Transfer</Button></DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader><DialogTitle>Stock Transfer</DialogTitle></DialogHeader>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Product</Label>
+                        <Select value={tProduct} onValueChange={setTProduct}>
+                          <SelectTrigger><SelectValue placeholder="Select product" /></SelectTrigger>
+                          <SelectContent>{products.map((p) => (<SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>))}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label>From</Label>
+                          <Select value={tFrom} onValueChange={setTFrom}>
+                            <SelectTrigger><SelectValue placeholder="Source" /></SelectTrigger>
+                            <SelectContent>{warehouses.map((w) => (<SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>))}</SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>To</Label>
+                          <Select value={tTo} onValueChange={setTTo}>
+                            <SelectTrigger><SelectValue placeholder="Destination" /></SelectTrigger>
+                            <SelectContent>{warehouses.map((w) => (<SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>))}</SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="space-y-2"><Label htmlFor="tq">Quantity</Label><Input id="tq" type="number" value={tQty} onChange={(e) => setTQty(e.target.value)} /></div>
+                    </div>
+                    <DialogFooter>
+                      <Button disabled={isPending || !tProduct || !tFrom || !tTo || tFrom === tTo || !tQty}
+                        onClick={() => run(async () => {
+                          await createTransferAction({ productId: tProduct, fromWarehouseId: tFrom, toWarehouseId: tTo, quantity: Number(tQty) || 0 })
+                          setTOpen(false); setTProduct(''); setTFrom(''); setTTo(''); setTQty('')
+                        }, 'Transfer recorded')}>Transfer</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
+            <Card>
+              <CardHeader><CardTitle>Stock Transfers</CardTitle><CardDescription>{transfers.length} recent</CardDescription></CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader><TableRow><TableHead>Product</TableHead><TableHead>From</TableHead><TableHead>To</TableHead><TableHead>Qty</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {transfers.map((t) => (
+                      <TableRow key={t.id}>
+                        <TableCell className="text-sm">{productName.get(t.productId) ?? '-'}</TableCell>
+                        <TableCell className="text-sm">{warehouseName.get(t.fromWarehouseId) ?? '-'}</TableCell>
+                        <TableCell className="text-sm">{warehouseName.get(t.toWarehouseId) ?? '-'}</TableCell>
+                        <TableCell>{t.quantity}</TableCell>
+                      </TableRow>
+                    ))}
+                    {transfers.length === 0 && (<TableRow><TableCell colSpan={4} className="text-center text-sm text-muted-foreground py-8">No transfers yet.</TableCell></TableRow>)}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   )

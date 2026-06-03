@@ -183,6 +183,7 @@ async function main() {
     { code: "finance.budget", module: "finance", name: "Budget" },
     { code: "workflows.escalation", module: "workflows", name: "Escalation" },
     { code: "analytics.dashboard-builder", module: "analytics", name: "Dashboard Builder" },
+    { code: "inventory.transfer", module: "inventory", name: "Stock Transfer" },
   ]
   for (const f of FEATURES) {
     const mod = await prisma.module.findUniqueOrThrow({ where: { code: f.module } })

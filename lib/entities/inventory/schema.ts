@@ -11,6 +11,10 @@ export const ProductSchema = z.object({
   name: z.string(),
   category: z.string().nullable(),
   unit: z.string(),
+  barcode: z.string().nullable(),
+  costPrice: z.number().int(),
+  sellPrice: z.number().int(),
+  minStock: z.number().int(),
   status: StatusSchema,
   createdAt: z.date(),
 })
@@ -21,6 +25,10 @@ export const CreateProductSchema = z.object({
   name: z.string().min(1),
   category: z.string().nullable().optional(),
   unit: z.string().default("pcs"),
+  barcode: z.string().nullable().optional(),
+  costPrice: z.number().int().min(0).default(0),
+  sellPrice: z.number().int().min(0).default(0),
+  minStock: z.number().int().min(0).default(0),
   status: StatusSchema.default("active"),
 })
 export type CreateProductInput = z.infer<typeof CreateProductSchema>
@@ -77,3 +85,29 @@ export const CreateStockMovementSchema = z.object({
   reference: z.string().nullable().optional(),
 })
 export type CreateStockMovementInput = z.infer<typeof CreateStockMovementSchema>
+
+export const StockTransferSchema = z.object({
+  id: z.string(),
+  organizationId: z.string(),
+  productId: z.string(),
+  fromWarehouseId: z.string(),
+  toWarehouseId: z.string(),
+  quantity: z.number().int(),
+  reference: z.string().nullable(),
+  createdBy: z.string(),
+  createdAt: z.date(),
+})
+export type StockTransferDto = z.infer<typeof StockTransferSchema>
+
+export const CreateStockTransferSchema = z
+  .object({
+    productId: z.string().min(1),
+    fromWarehouseId: z.string().min(1),
+    toWarehouseId: z.string().min(1),
+    quantity: z.number().int().min(1),
+    reference: z.string().nullable().optional(),
+  })
+  .refine((v) => v.fromWarehouseId !== v.toWarehouseId, {
+    message: "Source and destination warehouses must differ",
+  })
+export type CreateStockTransferInput = z.infer<typeof CreateStockTransferSchema>

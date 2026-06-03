@@ -10,6 +10,8 @@ import {
   type UpdateProductInput,
   type CreateWarehouseInput,
   type CreateStockMovementInput,
+  type StockTransferDto,
+  type CreateStockTransferInput,
 } from "./schema"
 import type { Status } from "@/lib/entities/organization/schema"
 
@@ -41,6 +43,10 @@ function toProduct(p: ProductRow): ProductDto {
     name: p.name,
     category: p.category,
     unit: p.unit,
+    barcode: p.barcode,
+    costPrice: p.costPrice,
+    sellPrice: p.sellPrice,
+    minStock: p.minStock,
     status: entOut[p.status] ?? "inactive",
     createdAt: p.createdAt,
   }
@@ -102,6 +108,10 @@ export async function createProduct(ctx: Ctx, data: CreateProductInput): Promise
       name: data.name,
       category: data.category ?? null,
       unit: data.unit,
+      barcode: data.barcode ?? null,
+      costPrice: data.costPrice,
+      sellPrice: data.sellPrice,
+      minStock: data.minStock,
       status: entIn[data.status],
     },
   })
@@ -120,6 +130,10 @@ export async function updateProduct(
       name: data.name,
       category: data.category,
       unit: data.unit,
+      barcode: data.barcode,
+      costPrice: data.costPrice,
+      sellPrice: data.sellPrice,
+      minStock: data.minStock,
       status: data.status ? entIn[data.status] : undefined,
     },
   })
@@ -227,4 +241,75 @@ export async function recordMovement(
     },
   })
   return toMovement(row)
+}
+
+// Stock transfers -------------------------------------------------------------
+
+type TransferRow = Prisma.StockTransferGetPayload<object>
+
+function toTransfer(t: TransferRow): StockTransferDto {
+  return {
+    id: t.id,
+    organizationId: t.organizationId,
+    productId: t.productId,
+    fromWarehouseId: t.fromWarehouseId,
+    toWarehouseId: t.toWarehouseId,
+    quantity: t.quantity,
+    reference: t.reference,
+    createdBy: t.createdBy,
+    createdAt: t.createdAt,
+  }
+}
+
+export async function listTransfers(ctx: Ctx): Promise<StockTransferDto[]> {
+  const rows = await db(ctx).stockTransfer.findMany({
+    where: { organizationId: ctx.orgId },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  })
+  return rows.map(toTransfer)
+}
+
+async function adjustStock(ctx: Ctx, productId: string, warehouseId: string, delta: number) {
+  const existing = await db(ctx).stock.findUnique({
+    where: { productId_warehouseId: { productId, warehouseId } },
+  })
+  const next = (existing?.quantity ?? 0) + delta
+  await db(ctx).stock.upsert({
+    where: { productId_warehouseId: { productId, warehouseId } },
+    update: { quantity: next },
+    create: { organizationId: ctx.orgId, productId, warehouseId, quantity: next },
+  })
+}
+
+export async function createTransfer(
+  ctx: Ctx,
+  data: CreateStockTransferInput,
+  createdBy: string,
+): Promise<StockTransferDto> {
+  const product = await db(ctx).product.findFirst({
+    where: { id: data.productId, organizationId: ctx.orgId, deletedAt: null },
+    select: { id: true },
+  })
+  if (!product) throw new Error("Product not found in this organization")
+  const whCount = await db(ctx).warehouse.count({
+    where: { id: { in: [data.fromWarehouseId, data.toWarehouseId] }, organizationId: ctx.orgId, deletedAt: null },
+  })
+  if (whCount !== 2) throw new Error("Warehouse not found in this organization")
+
+  await adjustStock(ctx, data.productId, data.fromWarehouseId, -data.quantity)
+  await adjustStock(ctx, data.productId, data.toWarehouseId, data.quantity)
+
+  const row = await db(ctx).stockTransfer.create({
+    data: {
+      organizationId: ctx.orgId,
+      productId: data.productId,
+      fromWarehouseId: data.fromWarehouseId,
+      toWarehouseId: data.toWarehouseId,
+      quantity: data.quantity,
+      reference: data.reference ?? null,
+      createdBy,
+    },
+  })
+  return toTransfer(row)
 }

@@ -76,6 +76,7 @@ model Organization {
   warehouses            Warehouse[]
   stocks                Stock[]
   stockMovements        StockMovement[]
+  stockTransfers        StockTransfer[]
   assets                Asset[]
   assetMaintenances     AssetMaintenance[]
   risks                 Risk[]
@@ -1349,6 +1350,10 @@ model Product {
   name           String
   category       String?
   unit           String       @default("pcs")
+  barcode        String?
+  costPrice      Int          @default(0) @map("cost_price")
+  sellPrice      Int          @default(0) @map("sell_price")
+  minStock       Int          @default(0) @map("min_stock")
   status         EntityStatus @default(ACTIVE)
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
@@ -1361,6 +1366,24 @@ model Product {
   @@index([organizationId])
   @@index([organizationId, deletedAt])
   @@map("products")
+}
+
+model StockTransfer {
+  id              String   @id @default(cuid())
+  organizationId  String   @map("organization_id")
+  productId       String   @map("product_id")
+  fromWarehouseId String   @map("from_warehouse_id")
+  toWarehouseId   String   @map("to_warehouse_id")
+  quantity        Int
+  reference       String?
+  createdBy       String   @map("created_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([organizationId, productId])
+  @@map("stock_transfers")
 }
 
 model Warehouse {

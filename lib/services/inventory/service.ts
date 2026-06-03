@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { requireSession } from "@/lib/auth"
-import { requireEntitlement } from "@/lib/entitlement"
+import { requireEntitlement, requireFeature } from "@/lib/entitlement"
 import { requirePermission } from "@/lib/rbac"
 import { auditLog, diff } from "@/lib/audit"
 import * as repo from "@/lib/entities/inventory/repository"
@@ -9,14 +9,17 @@ import {
   type WarehouseDto,
   type StockDto,
   type StockMovementDto,
+  type StockTransferDto,
   CreateProductSchema,
   UpdateProductSchema,
   CreateWarehouseSchema,
   CreateStockMovementSchema,
+  CreateStockTransferSchema,
 } from "@/lib/entities/inventory/schema"
 import { notFound } from "@/lib/errors"
 
 const MODULE = "inventory"
+const F_TRANSFER = "inventory.transfer"
 
 export async function getProducts(): Promise<ProductDto[]> {
   const s = await requireSession()
@@ -127,5 +130,33 @@ export async function recordMovement(input: unknown): Promise<StockMovementDto> 
       newValue: { type: m.type, quantity: m.quantity, productId: m.productId, warehouseId: m.warehouseId },
     })
     return m
+  })
+}
+
+// Stock transfers (feature: inventory.transfer) -------------------------------
+
+export async function getTransfers(): Promise<StockTransferDto[]> {
+  const s = await requireSession()
+  await requireEntitlement(s.orgId, MODULE)
+  await requireFeature(s.orgId, F_TRANSFER)
+  await requirePermission(s.userId, "inventory.view")
+  return repo.listTransfers({ orgId: s.orgId })
+}
+
+export async function createTransfer(input: unknown): Promise<StockTransferDto> {
+  const s = await requireSession()
+  await requireEntitlement(s.orgId, MODULE)
+  await requireFeature(s.orgId, F_TRANSFER)
+  await requirePermission(s.userId, "inventory.create")
+  const data = CreateStockTransferSchema.parse(input)
+  return prisma.$transaction(async (tx) => {
+    const t = await repo.createTransfer({ orgId: s.orgId, tx }, data, s.userId)
+    await auditLog.emit({
+      tx, orgId: s.orgId, userId: s.userId, userName: s.name,
+      entityType: "StockTransfer", entityId: t.id, action: "create",
+      description: `Transferred ${t.quantity} of product ${t.productId} between warehouses`,
+      newValue: { productId: t.productId, from: t.fromWarehouseId, to: t.toWarehouseId, quantity: t.quantity },
+    })
+    return t
   })
 }
